@@ -12,9 +12,12 @@
     using Avalonia.Controls;
 
     using HackF5.UnitySpy;
-    
+    using HackF5.UnitySpy.AvaloniaGui.Views;
+
     public class MainWindowViewModel : ReactiveObject
     {
+        private readonly MainWindow mainWindow;
+
         private ObservableCollection<ProcessViewModel> processesCollection;
 
         public ObservableCollection<ProcessViewModel> Processes => processesCollection;
@@ -31,16 +34,24 @@
         }
         
         public ReactiveCommand<Unit, Unit> RefreshProcesses { get; }
+        public ReactiveCommand<Unit, Unit> OpenMemPseudoFile { get; }
 
-        public MainWindowViewModel()
+        public MainWindowViewModel(MainWindow mainWindow)
         {
+            this.mainWindow = mainWindow;
             processesCollection = new ObservableCollection<ProcessViewModel>();
             RefreshProcesses = ReactiveCommand.Create(StartRefresh);
+            OpenMemPseudoFile = ReactiveCommand.Create(StartOpenMemPseudoFile);
         }       
 
         private void StartRefresh() 
         {
             Task.Run(ExecuteRefreshProcesses);
+        }
+
+        private void StartOpenMemPseudoFile() 
+        {
+            Task.Run(ExecuteOpenMemPseudoFileCommand);
         }
 
         private async Task ExecuteRefreshProcesses()
@@ -56,6 +67,28 @@
 
             //this.SelectedProcess = this.Processes.FirstOrDefault(p => p.Name == "Hearthstone");
         } 
+
+        private async void ExecuteOpenMemPseudoFileCommand()
+		{
+			OpenFileDialog dlg = new OpenFileDialog();
+			dlg.Title = "Open /proc/$pid/mem pseudo-file";
+			// dlg.Filters = new List<FileDialogFilter>()
+			// {
+			// 	new FileDialogFilter() { Name = ".NET assemblies", Extensions = {"dll","exe", "winmd" }},
+			// 	new FileDialogFilter() { Name = "Nuget Packages (*.nupkg)", Extensions = { "nupkg" }},
+			// 	new FileDialogFilter() { Name = "All files", Extensions = { "*" }},
+			// };
+			dlg.AllowMultiple = false;
+			//dlg.RestoreDirectory = true;
+			var filenames = await dlg.ShowAsync(mainWindow);
+			if (filenames != null && filenames.Length > 0)
+			{
+                // TODO implement
+				// OpenMemPseudoFile(filenames);
+			}
+		}
+
+
         
         private void/*async Task*/ BuildImageAsync(ProcessViewModel process)
         {
