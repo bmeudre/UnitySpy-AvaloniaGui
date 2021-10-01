@@ -2,15 +2,15 @@
 {
     using Avalonia.Controls;
     using Avalonia.Markup.Xaml;
-    using HackF5.UnitySpy.AvaloniaGui.ViewModels;
 
-    public class MainWindow : FluentWindow
+    public class WindowsProcessSourceView : UserControl
     {
-        public MainWindow()
+        private readonly ComboBox processesComboBox;
+
+        public WindowsProcessSourceView()
         {   
             this.InitializeComponent();
-            LinuxProcessSourceView  linuxProcessSourceView = this.Find<LinuxProcessSourceView>("LinuxProcessSourceView");
-            linuxProcessSourceView.DataContext = new LinuxProcessSourceViewModel(this);
+            processesComboBox = this.Find<ComboBox>("processesComboBox");
         }       
 
         protected void InitializeComponent() 

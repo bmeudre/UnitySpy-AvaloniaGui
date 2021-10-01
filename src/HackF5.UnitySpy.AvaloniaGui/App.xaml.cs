@@ -1,7 +1,6 @@
 ﻿namespace HackF5.UnitySpy.AvaloniaGui
 {
     using Avalonia;
-    using Avalonia.Controls;
     using Avalonia.Controls.ApplicationLifetimes;
     using Avalonia.Markup.Xaml;
     using HackF5.UnitySpy.AvaloniaGui.ViewModels;
@@ -18,9 +17,7 @@
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                MainWindow mainWindow = new MainWindow();
-                mainWindow.DataContext = new MainWindowViewModel(mainWindow);
-                desktop.MainWindow = mainWindow;
+                desktop.MainWindow = new MainWindow();
             }
             
             var theme = new Avalonia.Themes.Default.DefaultTheme();

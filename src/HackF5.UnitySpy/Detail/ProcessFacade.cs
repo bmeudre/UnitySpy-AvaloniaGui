@@ -1,9 +1,6 @@
 ﻿namespace HackF5.UnitySpy.Detail
 {
     using System;
-    using System.ComponentModel;
-    using System.Diagnostics;
-    using System.Runtime.InteropServices;
     using System.Text;
     using HackF5.UnitySpy.Util;
     using JetBrains.Annotations;
@@ -12,29 +9,15 @@
     /// A facade over a process that provides access to its memory space.
     /// </summary>
     [PublicAPI]
-    public class ProcessFacade
+    public abstract class ProcessFacade
     {
-        private readonly bool is64Bits;
+        protected MonoLibraryOffsets monoLibraryOffsets;
 
-        public ProcessFacade(int processId)
-        {
-            this.Process = Process.GetProcessById(processId);
-            is64Bits = Native.IsWow64Process(this.Process);
+        public MonoLibraryOffsets MonoLibraryOffsets => this.monoLibraryOffsets;
 
-            string mainModulePath = Native.GetMainModuleFileName(this.Process);
+        public int SizeOfPtr => this.monoLibraryOffsets.Is64Bits ? 8 : 4;
 
-            FileVersionInfo myFileVersionInfo = FileVersionInfo.GetVersionInfo(mainModulePath);
-            string unityVersion = myFileVersionInfo.FileVersion;
-            this.MonoLibraryOffsets = MonoLibraryOffsets.GetOffsets(unityVersion, is64Bits);
-        }
-
-        public Process Process { get; }
-
-        public MonoLibraryOffsets MonoLibraryOffsets { get; }
-
-        public int SizeOfPtr => is64Bits ? 8 : 4;
-
-        public bool Is64Bits => is64Bits;
+        public bool Is64Bits => this.monoLibraryOffsets.Is64Bits;
 
         public string ReadAsciiString(IntPtr address, int maxSize = 1024)
         {
@@ -176,7 +159,7 @@
             return buffer;
         }
 
-        public IntPtr ReadPtr(IntPtr address) => (IntPtr) (this.is64Bits ? this.ReadUInt64(address) : this.ReadUInt32(address));
+        public IntPtr ReadPtr(IntPtr address) => (IntPtr)(this.Is64Bits ? this.ReadUInt64(address) : this.ReadUInt32(address));
 
         public uint ReadUInt32(IntPtr address)
         {
@@ -192,14 +175,6 @@
         {
             return this.ReadBufferValue(address, sizeof(byte), b => b.ToByte());
         }
-
-        [DllImport("kernel32", SetLastError = true)]
-        private static extern bool ReadProcessMemory(
-            IntPtr hProcess,
-            IntPtr lpBaseAddress,
-            IntPtr lpBuffer,
-            int nSize,
-            out IntPtr lpNumberOfBytesRead);
 
         private TValue ReadBufferValue<TValue>(IntPtr address, int size, Func<byte[], TValue> read)
         {
@@ -290,37 +265,12 @@
             int? size = default)
             => this.ReadProcessMemory(buffer, new IntPtr(processAddress), allowPartialRead, size);
 
-        private void ReadProcessMemory(
+        protected abstract void ReadProcessMemory(
             byte[] buffer,
             IntPtr processAddress,
             bool allowPartialRead = false,
-            int? size = default)
-        {
-            var bufferHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+            int? size = default);
 
-            try
-            {
-                var bufferPointer = Marshal.UnsafeAddrOfPinnedArrayElement(buffer, 0);
-                if (!ProcessFacade.ReadProcessMemory(
-                    this.Process.Handle,
-                    processAddress,
-                    bufferPointer,
-                    size ?? buffer.Length,
-                    out _))
-                {
-                    var error = Marshal.GetLastWin32Error();
-                    if ((error == 299) && allowPartialRead)
-                    {
-                        return;
-                    }
-
-                    throw new Win32Exception(error);
-                }
-            }
-            finally
-            {
-                bufferHandle.Free();
-            }
-        }
+        public abstract ModuleInfo GetMonoModule();
     }
 }

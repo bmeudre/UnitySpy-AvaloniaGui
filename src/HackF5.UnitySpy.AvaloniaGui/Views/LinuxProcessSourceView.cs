@@ -2,15 +2,12 @@
 {
     using Avalonia.Controls;
     using Avalonia.Markup.Xaml;
-    using HackF5.UnitySpy.AvaloniaGui.ViewModels;
 
-    public class MainWindow : FluentWindow
+    public class LinuxProcessSourceView : UserControl
     {
-        public MainWindow()
+        public LinuxProcessSourceView()
         {   
             this.InitializeComponent();
-            LinuxProcessSourceView  linuxProcessSourceView = this.Find<LinuxProcessSourceView>("LinuxProcessSourceView");
-            linuxProcessSourceView.DataContext = new LinuxProcessSourceViewModel(this);
         }       
 
         protected void InitializeComponent() 

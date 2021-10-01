@@ -1,0 +1,34 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:HackF5.UnitySpy.AvaloniaGui.ViewModels;assembly=HackF5.UnitySpy.AvaloniaGui"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1350" d:DesignHeight="700" Height="200" Width="1400"
+        xmlns:local="clr-namespace:HackF5.UnitySpy.AvaloniaGui.Views"
+        x:Class="HackF5.UnitySpy.AvaloniaGui.Views.WindowsProcessSourceView"
+        Margin="0,0,0,0" 
+        Background="{x:Null}">
+
+  <Design.DataContext>
+    <vm:WindowsProcessSourceViewModel/>
+  </Design.DataContext>
+
+  <StackPanel Background="#FFFF00FF">
+    <StackPanel Orientation="Horizontal" Background="#FF0000FF">
+      <ComboBox 
+        Classes="header" 
+        x:Name="processesComboBox" 
+        Items="{Binding Processes}" 
+        SelectedItem="{Binding SelectedProcess}"
+        Background="#FFFF0000" Margin="0 0 0 20" >
+        <ComboBox.ItemTemplate>
+          <DataTemplate>
+            <TextBlock Text="{Binding NameAndID}"/>
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+    </StackPanel>
+      <Button Command="{Binding RefreshProcesses}" HorizontalAlignment="Stretch">Refresh</Button>
+  </StackPanel>
+
+</UserControl>

@@ -3,14 +3,16 @@ namespace HackF5.UnitySpy.Detail
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.IO;
 
     public class MonoLibraryOffsets
     {
-
         public static readonly MonoLibraryOffsets Unity2018_4_10_x86_Offests = new MonoLibraryOffsets
         {
             UnityVersion = "2018.4.10",
             Is64Bits = false,
+            MonoLibraryName = "mono-2.0-bdwgc.dll",
 
             AssemblyImage = 0x44,
             ReferencedAssemblies = 0x6c,
@@ -47,6 +49,7 @@ namespace HackF5.UnitySpy.Detail
         {
             UnityVersion = "2019.4.5",
             Is64Bits = true,
+            MonoLibraryName = "mono-2.0-bdwgc.dll",
 
             AssemblyImage = 0x44 + 0x1c,
             ReferencedAssemblies = 0x6c + 0x5c,
@@ -88,6 +91,8 @@ namespace HackF5.UnitySpy.Detail
         public string UnityVersion { get; private set; }
 
         public bool Is64Bits { get; private set; }
+
+        public string MonoLibraryName { get; private set; }
 
         public int AssemblyImage { get; private set; }
 
@@ -152,18 +157,67 @@ namespace HackF5.UnitySpy.Detail
         // Managed String Offsets
 
         public int UnicodeString { get; private set; }
-        
 
-        public static MonoLibraryOffsets GetOffsets(string unityVersion, bool is64Bits)
+        public static MonoLibraryOffsets GetOffsets(string gameExecutableFilePath, bool force = true)
+        {
+            FileVersionInfo myFileVersionInfo = FileVersionInfo.GetVersionInfo(gameExecutableFilePath);
+            string unityVersion = myFileVersionInfo.FileVersion;
+
+            // Taken from here https://stackoverflow.com/questions/1001404/check-if-unmanaged-dll-is-32-bit-or-64-bit;
+            // See http://www.microsoft.com/whdc/system/platform/firmware/PECOFF.mspx
+            // Offset to PE header is always at 0x3C.
+            // The PE header starts with "PE\0\0" =  0x50 0x45 0x00 0x00,
+            // followed by a 2-byte machine type field (see the document above for the enum).
+            //
+            FileStream fs = new FileStream(gameExecutableFilePath, FileMode.Open, FileAccess.Read);
+            BinaryReader br = new BinaryReader(fs);
+            fs.Seek(0x3c, SeekOrigin.Begin);
+            Int32 peOffset = br.ReadInt32();
+            fs.Seek(peOffset, SeekOrigin.Begin);
+            UInt32 peHead = br.ReadUInt32();
+
+            if (peHead != 0x00004550) // "PE\0\0", little-endian
+            {
+                throw new Exception("Can't find PE header");
+            }
+
+            int machineType = br.ReadUInt16();
+            br.Close();
+            fs.Close();
+
+            switch (machineType)
+            {
+                case 0x8664: // IMAGE_FILE_MACHINE_AMD64
+                    return GetOffsets(unityVersion, true, force);
+                case 0x14c: // IMAGE_FILE_MACHINE_I386
+                    return GetOffsets(unityVersion, false, force);
+                default:
+                    throw new NotSupportedException("Platform not supported");
+            }
+        }
+
+        public static MonoLibraryOffsets GetOffsets(string unityVersion, bool is64Bits, bool force = true)
         {
             MonoLibraryOffsets monoLibraryOffsets = SupportedVersions.Find(
                    offsets => offsets.Is64Bits == is64Bits
                 && unityVersion.StartsWith(offsets.UnityVersion)
             );
 
-            // TODO add code to find the best candidate instead of throwing exception.
             if (monoLibraryOffsets == null)
             {
+                if(force)
+                {
+                    List<MonoLibraryOffsets> matchingArchitectureSupportedVersion = SupportedVersions.FindAll(v => v.Is64Bits == is64Bits);
+                    if(matchingArchitectureSupportedVersion.Count == 1)
+                    {
+                        return matchingArchitectureSupportedVersion[0];
+                    }
+                    else if(matchingArchitectureSupportedVersion.Count > 1)
+                    {
+                        // TODO add code to find the best candidate instead of throwing exception.
+                    }
+                }
+
                 string mode = is64Bits ? "in 64 bits mode" : "in 32 Bits mode";
                 throw new NotSupportedException($"The unity version the process is running " +
                     $"({unityVersion} {mode}) is not supported");

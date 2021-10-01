@@ -1,11 +1,6 @@
 ﻿namespace HackF5.UnitySpy
 {
     using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using System.Runtime.InteropServices;
-    using System.Text;
     using HackF5.UnitySpy.Detail;
     using HackF5.UnitySpy.Util;
     using JetBrains.Annotations;
@@ -38,9 +33,37 @@
                     "This library reads data directly from a process's memory, so is platform specific "
                     + "and only runs under Windows. It might be possible to get it running under macOS, but...");
             }
+            
+            return Create(new ProcessFacadeWindows(processId), assemblyName);
+        }
 
-            var process = new ProcessFacade(processId);
-            var monoModule = AssemblyImageFactory.GetMonoModule(process);
+        /// <summary>
+        /// Creates an <see cref="IAssemblyImage"/> that provides access into a Unity application's managed memory.
+        /// </summary>
+        /// <param name="processId">
+        /// The id of the Unity process to be inspected.
+        /// </param>
+        /// <param name="assemblyName">
+        /// The name of the assembly to be inspected. The default setting of 'Assembly-CSharp' is probably what you want.
+        /// </param>
+        /// <returns>
+        /// An <see cref="IAssemblyImage"/> that provides access into a Unity application's managed memory.
+        /// </returns>
+        public static IAssemblyImage Create(string memPesudoFile, string mapsPesudoFile, string gameExecutableFile, string assemblyName = "Assembly-CSharp")
+        {
+            if (Environment.OSVersion.Platform != PlatformID.Unix)
+            {
+                throw new InvalidOperationException(
+                    "This library reads data directly from a process's memory, so is platform specific "
+                    + " and only runs under unix. It might be possible to get it running under windows, but...");
+            }
+            
+            return Create(new ProcessFacadeLinux(memPesudoFile, mapsPesudoFile, gameExecutableFile), assemblyName);
+        }
+        
+        public static IAssemblyImage Create(ProcessFacade process, string assemblyName = "Assembly-CSharp")
+        {
+            var monoModule = process.GetMonoModule();
             var moduleDump = process.ReadModule(monoModule);
             var rootDomainFunctionAddress = AssemblyImageFactory.GetRootDomainFunctionAddress(moduleDump, monoModule, process.Is64Bits);
 
@@ -49,7 +72,6 @@
 
         private static AssemblyImage GetAssemblyImage(ProcessFacade process, string name, IntPtr rootDomainFunctionAddress)
         {
-
             IntPtr domain;
             if (process.Is64Bits)
             {
@@ -94,49 +116,7 @@
             }
 
             throw new InvalidOperationException($"Unable to find assembly '{name}'");
-        }
-
-        // https://stackoverflow.com/questions/36431220/getting-a-list-of-dlls-currently-loaded-in-a-process-c-sharp
-        // TODO add check for matching platforms and implement the following code while keeping the existing one otherwise:
-        // This can be done with this if the process is running in 64 bits mode (and UnitySpy too of course)
-        // foreach(ProcessModule module in process.Process.Modules) {
-        //    if(module.ModuleName == "mono-2.0-bdwgc.dll") {
-        //        return new ModuleInfo(module.ModuleName, module.BaseAddress, module.ModuleMemorySize);
-        //    }            
-        private static ModuleInfo GetMonoModule(ProcessFacade process)
-        {            
-            var modulePointers = Native.GetProcessModulePointers(process);
-
-            // Collect modules from the process
-            var modules = new List<ModuleInfo>();
-            foreach (var modulePointer in modulePointers)
-            {
-                var moduleFilePath = new StringBuilder(1024);
-                var errorCode = Native.GetModuleFileNameEx(
-                    process.Process.Handle,
-                    modulePointer,
-                    moduleFilePath,
-                    (uint)moduleFilePath.Capacity);
-
-                if (errorCode == 0)
-                {
-                    throw new COMException("Failed to get module file name.", Marshal.GetLastWin32Error());
-                }
-
-                var moduleName = Path.GetFileName(moduleFilePath.ToString());
-                Native.GetModuleInformation(
-                    process.Process.Handle,
-                    modulePointer,
-                    out var moduleInformation,
-                    (uint)(IntPtr.Size * modulePointers.Length));
-
-                // Convert to a normalized module and add it to our list
-                var module = new ModuleInfo(moduleName, moduleInformation.BaseOfDll, moduleInformation.SizeInBytes);
-                modules.Add(module);
-            }
-
-            return modules.FirstOrDefault(module => module.ModuleName == "mono-2.0-bdwgc.dll");
-        }
+        }        
 
         private static IntPtr GetRootDomainFunctionAddress(byte[] moduleDump, ModuleInfo monoModuleInfo, bool is64Bits)
         {
