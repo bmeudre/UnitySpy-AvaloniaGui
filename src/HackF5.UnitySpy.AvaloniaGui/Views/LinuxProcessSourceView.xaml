@@ -3,26 +3,35 @@
         xmlns:vm="clr-namespace:HackF5.UnitySpy.AvaloniaGui.ViewModels;assembly=HackF5.UnitySpy.AvaloniaGui"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="1350" d:DesignHeight="700" Height="200" Width="1400"
         xmlns:local="clr-namespace:HackF5.UnitySpy.AvaloniaGui.Views"
         x:Class="HackF5.UnitySpy.AvaloniaGui.Views.LinuxProcessSourceView"
         Margin="0,0,0,0" 
         Background="{x:Null}">
 
-  <StackPanel Background="#FFFF00FF">
-    <StackPanel Orientation="Horizontal" Background="#FF0000FF">      
-      <TextBox Text="{Binding MemPseudoFilePath}" />
-      <Button Command="{Binding OpenMemPseudoFile}">Open</Button>
-    </StackPanel>
-    <StackPanel Orientation="Horizontal" Background="#FF0000FF">      
-      <TextBox Text="{Binding MapsPseudoFilePath}" />
-      <Button Command="{Binding OpenMapsPseudoFile}">Open</Button>
-    </StackPanel>
-    <StackPanel Orientation="Horizontal" Background="#FF0000FF">      
-      <TextBox Text="{Binding GameExecutableFilePath}" />
-      <Button Command="{Binding OpenGameExecutableFile}">Open</Button>
-    </StackPanel>
-    <Button Command="{Binding BuildImageAssembly}">Read</Button>
-  </StackPanel>
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="Auto"/>
+      <ColumnDefinition Width="*"/>
+      <ColumnDefinition Width="Auto"/>
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <TextBlock Margin="2" Grid.Column="0" Grid.Row="0" >Mem File</TextBlock>
+    <TextBox   Margin="2" Grid.Column="1" Grid.Row="0" Text="{Binding MemPseudoFilePath, Mode=TwoWay}" />
+    <Button    Margin="2" Grid.Column="2" Grid.Row="0" Command="{Binding OpenMemPseudoFile}">Open</Button>
+    <TextBlock Margin="2" Grid.Column="0" Grid.Row="1" >Maps File</TextBlock>
+    <TextBox   Margin="2" Grid.Column="1" Grid.Row="1" Text="{Binding MapsPseudoFilePath, Mode=TwoWay}" />
+    <Button    Margin="2" Grid.Column="2" Grid.Row="1" Command="{Binding OpenMapsPseudoFile}">Open</Button>
+    <TextBlock Margin="2" Grid.Column="0" Grid.Row="2" >Game Executable File</TextBlock>
+    <TextBox   Margin="2" Grid.Column="1" Grid.Row="2" Text="{Binding GameExecutableFilePath, Mode=TwoWay}" />
+    <Button    Margin="2" Grid.Column="2" Grid.Row="2" Command="{Binding OpenGameExecutableFile}">Open</Button>
+    <Button    Margin="2" Grid.Column="0" Grid.Row="3" Command="{Binding BuildImageAssembly}">Read</Button>
+
+  </Grid>
 
 </UserControl>

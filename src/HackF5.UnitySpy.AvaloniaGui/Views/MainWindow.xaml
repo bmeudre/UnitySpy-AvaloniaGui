@@ -3,7 +3,7 @@
         xmlns:vm="clr-namespace:HackF5.UnitySpy.AvaloniaGui.ViewModels;assembly=HackF5.UnitySpy.AvaloniaGui"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="1350" d:DesignHeight="700" Height="800" Width="1400"
+        mc:Ignorable="d" d:DesignWidth="1350" d:DesignHeight="700" Height="600" Width="900"
         xmlns:view="clr-namespace:HackF5.UnitySpy.AvaloniaGui.Views"
         x:Class="HackF5.UnitySpy.AvaloniaGui.Views.MainWindow"
         Icon="{x:Null}"
@@ -21,9 +21,9 @@
     <vm:MainWindowViewModel/>
   </Design.DataContext>
 
-  <StackPanel Background="#FFFF00FF">
-      <view:WindowsProcessSourceView IsVisible="{Binding $parent.DataContext.IsWindows}" />
-      <view:LinuxProcessSourceView Name="LinuxProcessSourceView" IsVisible="{Binding $parent.DataContext.IsLinux}" />
+  <StackPanel>
+      <view:WindowsProcessSourceView IsVisible="{Binding $parent.DataContext.IsWindows, Mode=OneTime}" />
+      <view:LinuxProcessSourceView Name="LinuxProcessSourceView" IsVisible="{Binding $parent.DataContext.IsLinux, Mode=OneTime}" />
       <!-- <view:AssemblyImageView
           Grid.Row="1"
           DataContext="{Binding Image}" /> -->
