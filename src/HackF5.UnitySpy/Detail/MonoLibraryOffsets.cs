@@ -9,9 +9,9 @@ namespace HackF5.UnitySpy.Detail
 
     public class MonoLibraryOffsets
     {
-        public static readonly MonoLibraryOffsets Unity2018_4_10_x86_Offests = new MonoLibraryOffsets
+        public static readonly MonoLibraryOffsets Unity2018_4_10_x86_Offsets = new MonoLibraryOffsets
         {
-            UnityVersion = "2018.4.10",
+            UnityVersion = new UnityVersion(2018, 4, 10),
             Is64Bits = false,
             MonoLibraryName = "mono-2.0-bdwgc.dll",
 
@@ -39,16 +39,16 @@ namespace HackF5.UnitySpy.Detail
 
             TypeDefinitionGenericContainer = 0x94,
             
-            TypeDefinitionRuntimeInfoDomainVtables = 0x4,
+            TypeDefinitionRuntimeInfoDomainVTables = 0x4,
 
             VTable = 0x28,
 
             UnicodeString = 0xc
         };
 
-        public static readonly MonoLibraryOffsets Unity2019_4_5_x64_Offests = new MonoLibraryOffsets
+        public static readonly MonoLibraryOffsets Unity2019_4_5_x64_Offsets = new MonoLibraryOffsets
         {
-            UnityVersion = "2019.4.5",
+            UnityVersion = new UnityVersion(2019, 4, 5),
             Is64Bits = true,
             MonoLibraryName = "mono-2.0-bdwgc.dll",
 
@@ -76,7 +76,7 @@ namespace HackF5.UnitySpy.Detail
 
             TypeDefinitionGenericContainer = 0x94 + 0x34 + 0x18 + 0x10,
 
-            TypeDefinitionRuntimeInfoDomainVtables = 0x4 + 0x4,
+            TypeDefinitionRuntimeInfoDomainVTables = 0x4 + 0x4,
 
             VTable = 0x28 + 0x18,
 
@@ -85,11 +85,11 @@ namespace HackF5.UnitySpy.Detail
 
         private static readonly List<MonoLibraryOffsets> SupportedVersions = new List<MonoLibraryOffsets>()
         {
-            Unity2018_4_10_x86_Offests,
-            Unity2019_4_5_x64_Offests
+            Unity2018_4_10_x86_Offsets,
+            Unity2019_4_5_x64_Offsets
         };
 
-        public string UnityVersion { get; private set; }
+        public UnityVersion UnityVersion { get; private set; }
 
         public bool Is64Bits { get; private set; }
 
@@ -147,7 +147,7 @@ namespace HackF5.UnitySpy.Detail
 
         // MonoClassRuntimeInfo Offsets
 
-        public int TypeDefinitionRuntimeInfoDomainVtables { get; private set; }
+        public int TypeDefinitionRuntimeInfoDomainVTables { get; private set; }
 
 
         // MonoVTable Offsets
@@ -201,9 +201,14 @@ namespace HackF5.UnitySpy.Detail
 
         public static MonoLibraryOffsets GetOffsets(string unityVersion, bool is64Bits, bool force = true)
         {
+            return GetOffsets(UnityVersion.Parse(unityVersion), is64Bits, force);
+        }
+
+        private static MonoLibraryOffsets GetOffsets(UnityVersion unityVersion, bool is64Bits, bool force = true)
+        {
             MonoLibraryOffsets monoLibraryOffsets = SupportedVersions.Find(
-                   offsets => offsets.Is64Bits == is64Bits
-                && unityVersion.StartsWith(offsets.UnityVersion)
+                   offsets => offsets.Is64Bits == is64Bits &&
+                              offsets.UnityVersion == unityVersion
             );
 
             if (monoLibraryOffsets == null)
@@ -217,7 +222,45 @@ namespace HackF5.UnitySpy.Detail
                     }
                     else if(matchingArchitectureSupportedVersion.Count > 1)
                     {
-                        // TODO add code to find the best candidate instead of throwing exception.
+                        MonoLibraryOffsets bestCandidate = matchingArchitectureSupportedVersion[0];
+                        int bestCandidateYearDistance = 
+                            Math.Abs(unityVersion.Year - bestCandidate.UnityVersion.Year);
+                        int bestCandidateVersionWithinYearDistance = 
+                            Math.Abs(unityVersion.VersionWithinYear - bestCandidate.UnityVersion.VersionWithinYear);
+                        int bestCandidateSubversionWithinYearDistance = 
+                            Math.Abs(unityVersion.SubversionWithinYear - bestCandidate.UnityVersion.SubversionWithinYear);
+                        for (int i = 1; i < matchingArchitectureSupportedVersion.Count; i++)
+                        {
+                            UnityVersion candidateVersion = matchingArchitectureSupportedVersion[i].UnityVersion;
+                            if (
+                                    Math.Abs(unityVersion.Year - candidateVersion.Year) < bestCandidateYearDistance
+                                || (
+                                       Math.Abs(unityVersion.Year - candidateVersion.Year) == bestCandidateYearDistance
+                                    && (
+                                            Math.Abs(unityVersion.VersionWithinYear - candidateVersion.VersionWithinYear) 
+                                                < bestCandidateVersionWithinYearDistance
+                                        || (
+                                                Math.Abs(unityVersion.VersionWithinYear - candidateVersion.VersionWithinYear) 
+                                                    == bestCandidateVersionWithinYearDistance
+                                            && (
+                                                Math.Abs(unityVersion.SubversionWithinYear - candidateVersion.SubversionWithinYear) 
+                                                    < bestCandidateSubversionWithinYearDistance
+                                               )
+                                           )
+                                       )
+                                   )
+                                ) {
+
+                                bestCandidate = matchingArchitectureSupportedVersion[i];
+                                bestCandidateYearDistance = 
+                                    Math.Abs(unityVersion.Year - candidateVersion.Year);
+                                bestCandidateVersionWithinYearDistance = 
+                                    Math.Abs(unityVersion.VersionWithinYear - candidateVersion.VersionWithinYear);
+                                bestCandidateSubversionWithinYearDistance = 
+                                    Math.Abs(unityVersion.SubversionWithinYear - candidateVersion.SubversionWithinYear);                        
+                            }
+                        }
+                        return bestCandidate;
                     }
                 }
 
