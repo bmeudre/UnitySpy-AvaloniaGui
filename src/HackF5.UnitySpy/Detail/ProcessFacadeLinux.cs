@@ -8,37 +8,14 @@
     /// A Windows specific facade over a process that provides access to its memory space.
     /// </summary>
     [PublicAPI]
-    public class ProcessFacadeLinux : ProcessFacade
+    public abstract class ProcessFacadeLinux : ProcessFacade
     {
-        private readonly string memFilePath;
         private readonly string mapsFilePath;
         
-        public ProcessFacadeLinux(string memFilePath, string mapsFilePath, string gameExecutableFilePath)
+        public ProcessFacadeLinux(string mapsFilePath, string gameExecutableFilePath)
         {
-            this.memFilePath = memFilePath;
             this.mapsFilePath = mapsFilePath;
             this.monoLibraryOffsets = MonoLibraryOffsets.GetOffsets(gameExecutableFilePath);
-        }
-
-        protected override void ReadProcessMemory(
-            byte[] buffer,
-            IntPtr processAddress,
-            bool allowPartialRead = false,
-            int? size = default)
-        {
-            int length = size ?? buffer.Length;
-            using(FileStream memFileStream = new FileStream(memFilePath, FileMode.Create))
-            {
-                // Write the data to the file, byte by byte.
-                for(int i = 0; i < length; i++)
-                {
-                    if(buffer[i] != memFileStream.ReadByte())
-                    {
-                        Console.WriteLine("Error reading data.");
-                        return;
-                    }
-                }
-            }
         }
 
         public override ModuleInfo GetMonoModule() 

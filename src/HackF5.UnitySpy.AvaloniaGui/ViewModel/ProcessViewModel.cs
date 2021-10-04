@@ -1,4 +1,4 @@
-namespace HackF5.UnitySpy.AvaloniaGui.ViewModels
+namespace HackF5.UnitySpy.AvaloniaGui.ViewModel
 {
     using System.Diagnostics;
     using ReactiveUI;
@@ -7,11 +7,11 @@ namespace HackF5.UnitySpy.AvaloniaGui.ViewModels
     {
         private readonly Process process;
 
-        public int ID => process.Id;
+        public int Id => process.Id;
 
         public string Name => process.ProcessName;
 
-        public string NameAndID => Name + "(" + ID + ")";
+        public string NameAndId => Name + "(" + Id + ")";
 
         public ProcessViewModel(Process process)
         {

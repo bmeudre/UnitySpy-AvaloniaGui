@@ -14,7 +14,7 @@
     public static class AssemblyImageFactory
     {
         /// <summary>
-        /// Creates an <see cref="IAssemblyImage"/> that provides access into a Unity application's managed memory.
+        /// Creates an <see cref="IAssemblyImage"/> that provides access into a Unity application's managed memory on Windows.
         /// </summary>
         /// <param name="processId">
         /// The id of the Unity process to be inspected.
@@ -38,10 +38,17 @@
         }
 
         /// <summary>
-        /// Creates an <see cref="IAssemblyImage"/> that provides access into a Unity application's managed memory.
+        /// Creates an <see cref="IAssemblyImage"/> that provides access into
+        /// a Unity application's managed memory on Linux through the /proc/$pid/mem file. It needs root access.
         /// </summary>
-        /// <param name="processId">
-        /// The id of the Unity process to be inspected.
+        /// <param name="memPseudoFile">
+        /// /proc/$pid/mem file (needs root access)
+        /// </param>
+        /// <param name="mapsPseudoFile">
+        /// /proc/$pid/maps file
+        /// </param>
+        /// <param name="gameExecutableFile">
+        /// The location of the game's main executable
         /// </param>
         /// <param name="assemblyName">
         /// The name of the assembly to be inspected. The default setting of 'Assembly-CSharp' is probably what you want.
@@ -49,7 +56,7 @@
         /// <returns>
         /// An <see cref="IAssemblyImage"/> that provides access into a Unity application's managed memory.
         /// </returns>
-        public static IAssemblyImage Create(string memPesudoFile, string mapsPesudoFile, string gameExecutableFile, string assemblyName = "Assembly-CSharp")
+        public static IAssemblyImage Create(string memPseudoFile, string mapsPseudoFile, string gameExecutableFile, string assemblyName = "Assembly-CSharp")
         {
             if (Environment.OSVersion.Platform != PlatformID.Unix)
             {
@@ -58,7 +65,35 @@
                     + " and only runs under unix. It might be possible to get it running under windows, but...");
             }
             
-            return Create(new ProcessFacadeLinux(memPesudoFile, mapsPesudoFile, gameExecutableFile), assemblyName);
+            return Create(new ProcessFacadeLinuxDirect(memPseudoFile, mapsPseudoFile, gameExecutableFile), assemblyName);
+        }
+
+        /// <summary>
+        /// Creates an <see cref="IAssemblyImage"/> that provides access into
+        /// a Unity application's managed memory on Linux through client-server model
+        /// </summary>
+        /// <param name="mapsPseudoFile">
+        /// /proc/$pid/maps file
+        /// </param>
+        /// <param name="gameExecutableFile">
+        /// The location of the game's main executable
+        /// </param>
+        /// <param name="assemblyName">
+        /// The name of the assembly to be inspected. The default setting of 'Assembly-CSharp' is probably what you want.
+        /// </param>
+        /// <returns>
+        /// An <see cref="IAssemblyImage"/> that provides access into a Unity application's managed memory.
+        /// </returns>
+        public static IAssemblyImage Create(string mapsPseudoFile, string gameExecutableFile, string assemblyName = "Assembly-CSharp")
+        {
+            if (Environment.OSVersion.Platform != PlatformID.Unix)
+            {
+                throw new InvalidOperationException(
+                    "This library reads data directly from a process's memory, so is platform specific "
+                    + " and only runs under unix. It might be possible to get it running under windows, but...");
+            }
+            
+            return Create(new ProcessFacadeLinuxClient(mapsPseudoFile, gameExecutableFile), assemblyName);
         }
         
         public static IAssemblyImage Create(ProcessFacade process, string assemblyName = "Assembly-CSharp")

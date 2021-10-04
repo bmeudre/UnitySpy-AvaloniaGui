@@ -3,8 +3,8 @@
     using Avalonia;
     using Avalonia.Controls.ApplicationLifetimes;
     using Avalonia.Markup.Xaml;
-    using HackF5.UnitySpy.AvaloniaGui.ViewModels;
-    using HackF5.UnitySpy.AvaloniaGui.Views;
+    using HackF5.UnitySpy.AvaloniaGui.ViewModel;
+    using HackF5.UnitySpy.AvaloniaGui.View;
 
     public class App : Application
     {
@@ -17,7 +17,9 @@
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                desktop.MainWindow = new MainWindow();
+                MainWindow mainWindow = new MainWindow();
+                mainWindow.DataContext = new MainWindowViewModel(mainWindow);
+                desktop.MainWindow = mainWindow;
             }
             
             var theme = new Avalonia.Themes.Default.DefaultTheme();

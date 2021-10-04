@@ -2,6 +2,7 @@
 namespace HackF5.UnitySpy.Detail
 {
     using System;
+    using System.Reflection;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
@@ -160,9 +161,9 @@ namespace HackF5.UnitySpy.Detail
 
         public static MonoLibraryOffsets GetOffsets(string gameExecutableFilePath, bool force = true)
         {
-            FileVersionInfo myFileVersionInfo = FileVersionInfo.GetVersionInfo(gameExecutableFilePath);
-            string unityVersion = myFileVersionInfo.FileVersion;
-
+            var peHeader = new PeNet.PeFile(gameExecutableFilePath);
+            string unityVersion = peHeader.Resources.VsVersionInfo.StringFileInfo.StringTable[0].FileVersion;
+            
             // Taken from here https://stackoverflow.com/questions/1001404/check-if-unmanaged-dll-is-32-bit-or-64-bit;
             // See http://www.microsoft.com/whdc/system/platform/firmware/PECOFF.mspx
             // Offset to PE header is always at 0x3C.
@@ -184,6 +185,8 @@ namespace HackF5.UnitySpy.Detail
             int machineType = br.ReadUInt16();
             br.Close();
             fs.Close();
+
+            Console.WriteLine($"game file closed");
 
             switch (machineType)
             {
@@ -223,6 +226,7 @@ namespace HackF5.UnitySpy.Detail
                     $"({unityVersion} {mode}) is not supported");
             }
 
+            Console.WriteLine($"Mono library selected = {monoLibraryOffsets.UnityVersion}");
             return monoLibraryOffsets;
         }
     }

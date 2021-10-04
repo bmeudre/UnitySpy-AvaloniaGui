@@ -1,14 +1,15 @@
-﻿namespace HackF5.UnitySpy.AvaloniaGui.Views
+﻿namespace HackF5.UnitySpy.AvaloniaGui.View
 {
     using Avalonia.Controls;
     using Avalonia.Markup.Xaml;
 
-    public class LinuxProcessSourceView : UserControl
+    public class TypeDefinitionView : UserControl
     {
-        public LinuxProcessSourceView()
-        {   
+        public TypeDefinitionView()
+        {
             this.InitializeComponent();
-        }       
+            this.Initialized += (sender, args) => this.FindControl<TextBox>("PathTextBox").Focus();
+        }
 
         protected void InitializeComponent() 
         {
