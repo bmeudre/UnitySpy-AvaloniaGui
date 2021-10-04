@@ -56,7 +56,7 @@
             this.NamespaceName = this.ReadString(image.Process.MonoLibraryOffsets.TypeDefinitionNamespace);
             this.Size = this.ReadInt32(image.Process.MonoLibraryOffsets.TypeDefinitionSize);
             var vtablePtr = this.ReadPtr(image.Process.MonoLibraryOffsets.TypeDefinitionRuntimeInfo);
-            this.VTable = vtablePtr == Constants.NullPtr ? Constants.NullPtr : image.Process.ReadPtr(vtablePtr + image.Process.MonoLibraryOffsets.TypeDefinitionRuntimeInfoDomainVtables);
+            this.VTable = vtablePtr == Constants.NullPtr ? Constants.NullPtr : image.Process.ReadPtr(vtablePtr + image.Process.MonoLibraryOffsets.TypeDefinitionRuntimeInfoDomainVTables);
             this.TypeInfo = new TypeInfo(image, this.Address + image.Process.MonoLibraryOffsets.TypeDefinitionByValArg);
             this.VTableSize = vtablePtr == Constants.NullPtr ? 0 : this.ReadInt32(image.Process.MonoLibraryOffsets.TypeDefinitionVTableSize);
             this.ClassKind = (MonoClassKind)(this.ReadByte(image.Process.MonoLibraryOffsets.TypeDefinitionClassKind) & 0x7);
