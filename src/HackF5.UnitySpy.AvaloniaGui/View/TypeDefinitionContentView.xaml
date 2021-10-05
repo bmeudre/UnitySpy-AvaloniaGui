@@ -4,8 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
-    xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
     xmlns:viewModel="clr-namespace:HackF5.UnitySpy.AvaloniaGui.ViewModel"
     d:DataContext="{d:DesignInstance viewModel:TypeDefinitionContentViewModel}"
     d:DesignHeight="450"
@@ -17,17 +15,11 @@
             Name="ItemsList"
             BorderBrush="Transparent"
             BorderThickness="0"
+            DoubleTapped="Control_OnMouseDoubleClick"
             Items="{Binding StaticFields}">
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="viewModel:StaticFieldViewModel">
                     <StackPanel Orientation="Horizontal">
-
-                        <i:Interaction.Behaviors>
-                            <ia:EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #ItemsList}">
-                                <ia:CallMethodAction TargetObject="{Binding #TypeDefinitionContentView}" MethodName="Control_OnMouseDoubleClick"/>
-                            </ia:EventTriggerBehavior>
-                        </i:Interaction.Behaviors>
-
                         <TextBlock
                             Margin="0,0,5,0"
                             Text="{Binding Name}" />

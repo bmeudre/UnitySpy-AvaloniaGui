@@ -56,17 +56,17 @@
         /// <returns>
         /// An <see cref="IAssemblyImage"/> that provides access into a Unity application's managed memory.
         /// </returns>
-        public static IAssemblyImage Create(string memPseudoFile, string mapsPseudoFile, string gameExecutableFile, string assemblyName = "Assembly-CSharp")
-        {
-            if (Environment.OSVersion.Platform != PlatformID.Unix)
-            {
-                throw new InvalidOperationException(
-                    "This library reads data directly from a process's memory, so is platform specific "
-                    + " and only runs under unix. It might be possible to get it running under windows, but...");
-            }
+        // public static IAssemblyImage Create(string memPseudoFile, string mapsPseudoFile, string gameExecutableFile, string assemblyName = "Assembly-CSharp")
+        // {
+        //     if (Environment.OSVersion.Platform != PlatformID.Unix)
+        //     {
+        //         throw new InvalidOperationException(
+        //             "This library reads data directly from a process's memory, so is platform specific "
+        //             + " and only runs under unix. It might be possible to get it running under windows, but...");
+        //     }
             
-            return Create(new ProcessFacadeLinuxDirect(memPseudoFile, mapsPseudoFile, gameExecutableFile), assemblyName);
-        }
+        //     return Create(new ProcessFacadeLinuxDirect(memPseudoFile, mapsPseudoFile, gameExecutableFile), assemblyName);
+        // }
 
         /// <summary>
         /// Creates an <see cref="IAssemblyImage"/> that provides access into

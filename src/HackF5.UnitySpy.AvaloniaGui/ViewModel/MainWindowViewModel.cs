@@ -9,6 +9,7 @@
     using System.Reactive;
     using System.Threading.Tasks;
     using Avalonia.Controls;
+    using HackF5.UnitySpy.Detail;
     using HackF5.UnitySpy.AvaloniaGui.Mvvm;
     using HackF5.UnitySpy.AvaloniaGui.View;
     using ReactiveUI;
@@ -64,6 +65,7 @@
                     else if(IsLinux)
                     {
                         this.MapsPseudoFilePath = $"/proc/{value.Id}/maps";
+                        this.GameExecutableFilePath = $"/proc/{value.Id}/exe";
                     }
                 }
             }
@@ -200,6 +202,9 @@
                 }
                 else if(IsLinux)
                 {
+                    // ProcessFacade process = new ProcessFacadeLinuxDirect(this.selectedProcess.Id, this.MapsPseudoFilePath, this.GameExecutableFilePath);
+                    // assemblyImage = AssemblyImageFactory.Create(process);
+                    
                     assemblyImage = AssemblyImageFactory.Create(this.MapsPseudoFilePath, this.GameExecutableFilePath);
                 }
                 else

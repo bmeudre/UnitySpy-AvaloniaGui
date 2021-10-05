@@ -42,7 +42,7 @@
                     Connect();
                 }
 
-                Console.WriteLine($"Memory Chunk Requested: address = {request}");   
+                //Console.WriteLine($"Memory Chunk Requested: address = {request}");   
 
                 // Send the data through the socket.  
                 int bytesSent = socket.Send(request.GetBytes());
@@ -58,7 +58,7 @@
                     length -= bytesRec;
                 }
                 while(length > 0);          
-                Console.WriteLine("Memory Chunk Received");   
+                //Console.WriteLine("Memory Chunk Received");   
             }
             catch (ArgumentNullException ane)
             {

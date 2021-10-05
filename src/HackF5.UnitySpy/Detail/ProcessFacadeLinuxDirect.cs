@@ -18,11 +18,11 @@
             this.memFilePath = memFilePath;
         }
 
-        protected override void ReadProcessMemory(
+        protected unsafe override void ReadProcessMemory(
             byte[] buffer,
             IntPtr processAddress,
             int length)
-        {
+        {            
             using(FileStream memFileStream = new FileStream(memFilePath, FileMode.Create))
             {
                 // Write the data to the file, byte by byte.
@@ -30,8 +30,7 @@
                 {
                     if(buffer[i] != memFileStream.ReadByte())
                     {
-                        Console.WriteLine("Error reading data.");
-                        return;
+                        throw new Exception("Error reading data from "+memFilePath);
                     }
                 }
             }

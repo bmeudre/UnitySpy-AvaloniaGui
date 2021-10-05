@@ -1,6 +1,7 @@
 ﻿namespace HackF5.UnitySpy.AvaloniaGui.View
 {
     using Avalonia.Controls;
+    using Avalonia.Interactivity;
     using Avalonia.Markup.Xaml;
     using HackF5.UnitySpy.AvaloniaGui.ViewModel;
 
@@ -12,8 +13,6 @@
         {
             this.InitializeComponent();
             this.itemsList = this.FindControl<ListBox>("ItemsList");
-
-            System.Console.WriteLine("Initialized List Content View");
         }
 
         protected void InitializeComponent() 
@@ -22,7 +21,7 @@
             //this.AttachDevTools();
         } 
 
-        private void Control_OnMouseDoubleClick(object sender, object e)
+        public void Control_OnMouseDoubleClick(object sender, RoutedEventArgs e)
         {
             if (!(this.itemsList.SelectedItem is ListItemViewModel item))
             {
