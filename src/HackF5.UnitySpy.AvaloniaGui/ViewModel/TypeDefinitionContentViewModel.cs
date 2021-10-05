@@ -3,10 +3,10 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using HackF5.UnitySpy.AvaloniaGui.Mvvm;
     using JetBrains.Annotations;
+    using ReactiveUI;
 
-    public class TypeDefinitionContentViewModel : PropertyChangedBase
+    public class TypeDefinitionContentViewModel : ReactiveObject
     {
         private readonly ITypeDefinition definition;
 
@@ -17,7 +17,7 @@
             this.definition = definition ?? throw new ArgumentNullException(nameof(definition));
             this.StaticFields = this.definition.Fields.Where(f => f.TypeInfo.IsStatic && !f.TypeInfo.IsConstant)
                 .Select(f => fieldFactory(f))
-                .ToArray();
+                .ToArray();            
         }
 
         public delegate TypeDefinitionContentViewModel Factory(ITypeDefinition definition);

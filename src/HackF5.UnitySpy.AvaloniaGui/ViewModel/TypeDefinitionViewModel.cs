@@ -67,12 +67,12 @@
             get => this.path;
             set
             {
-                if (this.RaiseAndSetIfChanged(ref this.path, value).Length == 0)
+                if(this.path != value)
                 {
-                    return;
-                }
+                    this.RaiseAndSetIfChanged(ref this.path, value);
 
-                this.ParsePath(this.Path ?? string.Empty);
+                    this.ParsePath(this.Path ?? string.Empty);
+                }
             }
         }
 
@@ -99,6 +99,9 @@
 
         private void ParsePath(string value)
         {
+
+            Console.WriteLine("Parsing path");
+
             var parts = value.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(p => p.Trim())
                 .Where(p => !string.IsNullOrWhiteSpace(p))

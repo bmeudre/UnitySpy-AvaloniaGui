@@ -66,11 +66,6 @@ int get_arena_pid()
                 }
                 fclose(fp);
             }
-            // else
-            // {
-            //     perror("Could not open /proc/$pid/status");
-		    //     printf("File: %s\n", filepath);  
-            // }
 
         }
         closedir(dir);//Shut down the path
@@ -85,6 +80,7 @@ int get_arena_pid()
 int main(int argc, char *argv[])
 {
     int arena_pid;
+    ssize_t recv_size;
 	int socket_desc, new_socket, c;
 	struct sockaddr_in server, client;
     char request[REQUEST_SIZE]; 
@@ -122,7 +118,8 @@ int main(int argc, char *argv[])
 	while( (new_socket = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
 	{		
         //Receive a request from the client
-        if(recv(new_socket, request, REQUEST_SIZE, 0) < 0)
+        recv_size = recv(new_socket, request, REQUEST_SIZE, 0);
+        if(recv_size < 0)
         {
             puts("recv failed");
         }
@@ -140,27 +137,37 @@ int main(int argc, char *argv[])
 		        printf("File: %s, arena_pid as i: %i, arena_pid as u: %u\n", filepath, arena_pid, arena_pid);  
             }
             else
-            {
-                int bytes_to_read;
-                fseek(fp, *address, SEEK_SET);
-                while(*mem_size > 0)
-                {                 
-                    if(*mem_size < BUFFER_SIZE)
-                    {
-                        bytes_to_read = *mem_size;
-                    } 
-                    else
-                    {
-                        bytes_to_read = BUFFER_SIZE;
+            {                                
+                size_t bytes_to_read;
+                size_t remaining_bytes;
+                do
+                {      
+                    printf("Memory chunk requested: Address = %08X, size = %i\n", *address, *mem_size);  
+
+                    fseek(fp, *address, SEEK_SET);
+                    remaining_bytes = *mem_size;
+                    while(remaining_bytes > 0)
+                    {                 
+                        if(remaining_bytes < BUFFER_SIZE)
+                        {
+                            bytes_to_read = remaining_bytes;
+                        } 
+                        else
+                        {
+                            bytes_to_read = BUFFER_SIZE;
+                        }
+                        bytes_to_read = fread(buff, sizeof(char), bytes_to_read, fp);
+                        remaining_bytes -= bytes_to_read;
+                        if(send(new_socket, buff, bytes_to_read, 0) < 0)
+                        {
+                            perror("Fail to send file");
+                            break;
+                        }
                     }
-                    *mem_size -= fread(buff, sizeof(char), bytes_to_read, fp);
-                    if(send(new_socket, buff, bytes_to_read, 0) < 0)
-                    {
-                        perror("Fail to send file");
-                        break;
-                    }
-                }
-                //printf("memory chunk sent to the client!\n");
+                    printf("memory chunk sent to the client!\n");
+                } while(recv(new_socket, request, REQUEST_SIZE, 0) >= 0);
+
+                puts("recv failed");
                 fclose(fp);
             }            
         }
@@ -168,11 +175,16 @@ int main(int argc, char *argv[])
         close(new_socket);
 	}
 	
+    
+    puts("Exiting...");
+
 	if (new_socket < 0)
 	{
 		perror("accept failed");
 		return 1;
 	}
+
+    puts("Exiting...");
 	
 	return 0;
 }

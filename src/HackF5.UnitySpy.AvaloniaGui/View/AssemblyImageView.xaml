@@ -23,7 +23,7 @@
             <ColumnDefinition Width="3*" />
         </Grid.ColumnDefinitions>
 
-        <DockPanel Background="White">
+        <DockPanel>
             <TextBox
                 Name="ListViewFilter"
                 DockPanel.Dock="Top"

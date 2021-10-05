@@ -4,14 +4,16 @@
     using Avalonia.Markup.Xaml;
     using HackF5.UnitySpy.AvaloniaGui.ViewModel;
 
-    public class TypeDefinitionContentView : UserControl
+    public class ListContentView : UserControl
     {
         private readonly ListBox itemsList;
 
-        public TypeDefinitionContentView()
+        public ListContentView()
         {
             this.InitializeComponent();
             this.itemsList = this.FindControl<ListBox>("ItemsList");
+
+            System.Console.WriteLine("Initialized List Content View");
         }
 
         protected void InitializeComponent() 
@@ -20,19 +22,19 @@
             //this.AttachDevTools();
         } 
 
-        public void Control_OnMouseDoubleClick(object sender, object e)
+        private void Control_OnMouseDoubleClick(object sender, object e)
         {
-            if (!(this.itemsList.SelectedItem is StaticFieldViewModel item))
+            if (!(this.itemsList.SelectedItem is ListItemViewModel item))
             {
                 return;
             }
 
-            if (!(this.DataContext is TypeDefinitionContentViewModel model))
+            if (!(this.DataContext is ListContentViewModel model))
             {
                 return;
             }
 
-            model.OnAppendToTrail(item.Name);
+            model.OnAppendToTrail(item.Index.ToString());
         }
     }
 }

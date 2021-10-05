@@ -1,12 +1,14 @@
 ﻿namespace HackF5.UnitySpy.AvaloniaGui.Mvvm
 {
+    using System;
     using Avalonia;
     using Avalonia.Controls;
-    using Avalonia.Markup.Xaml;
-    using Avalonia.Metadata;
+    using Avalonia.Styling;
 
-    public class ExtendedContentControl : ContentControl
+    public class ExtendedContentControl : ContentControl, IStyleable
     {
+        Type IStyleable.StyleKey => typeof(ContentControl);
+
         public static readonly DirectProperty<ExtendedContentControl, object> ExtendedContentProperty = 
             AvaloniaProperty.RegisterDirect<ExtendedContentControl, object>(
                 nameof(ExtendedContent),
@@ -21,7 +23,7 @@
 
         private static void OnExtendedContentChanged(ExtendedContentControl control, object value)
         {
-            control.Content = ViewLocator.GetViewFor(value);
+            control.Content = ViewLocator.GetViewFor(value);           
         }
     }
 }

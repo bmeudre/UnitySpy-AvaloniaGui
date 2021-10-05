@@ -50,28 +50,30 @@
         <ListBox
             Grid.Row="1"
             Height="24"
-            Background="Black"
             BorderBrush="Transparent"
             BorderThickness="0"
             Foreground="Yellow"
             Items="{Binding Trail}">
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
-
-
-                    
                     <!-- IsItemsHost="True" -->
                     <VirtualizingStackPanel
-                        Orientation="Horizontal" />
-
-                        
+                        Orientation="Horizontal" />                        
                 </ItemsPanelTemplate>
             </ListBox.ItemsPanel>
         </ListBox>
+        
         <mvvm:ExtendedContentControl
             Grid.Row="2"
-            Background="White"
-            ExtendedContent="{Binding Content}" />
+            Background="White" 
+            ExtendedContent="{Binding Content}" /> 
+
+        <!-- <ContentControl
+            Grid.Row="2"
+            Background="Red">
+
+            <TextBlock>TextBlock Inside Content Control</TextBlock>
+        </ContentControl> -->
 
     </Grid>
 </UserControl> 

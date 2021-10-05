@@ -45,7 +45,7 @@
         Items="{Binding Processes}" 
         SelectedItem="{Binding SelectedProcess, Mode=TwoWay}"
         HorizontalAlignment="Stretch"
-        Background="#FFFF0000" Margin="2" >
+        Margin="2" >
         <ComboBox.ItemTemplate>
           <DataTemplate>
             <TextBlock Text="{Binding NameAndId}"/>

@@ -21,10 +21,8 @@
         protected override void ReadProcessMemory(
             byte[] buffer,
             IntPtr processAddress,
-            bool allowPartialRead = false,
-            int? size = default)
+            int length)
         {
-            int length = size ?? buffer.Length;
             using(FileStream memFileStream = new FileStream(memFilePath, FileMode.Create))
             {
                 // Write the data to the file, byte by byte.

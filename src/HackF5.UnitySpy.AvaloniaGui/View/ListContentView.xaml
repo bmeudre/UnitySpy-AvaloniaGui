@@ -1,5 +1,5 @@
 ﻿<UserControl
-    x:Class="HackF5.UnitySpy.AvaloniaGui.View.ManagedObjectInstanceContentView"
+    x:Class="HackF5.UnitySpy.AvaloniaGui.View.ListContentView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -7,19 +7,20 @@
     xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
     xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
     xmlns:viewModel="clr-namespace:HackF5.UnitySpy.AvaloniaGui.ViewModel"
-    d:DataContext="{d:DesignInstance viewModel:ManagedObjectInstanceContentViewModel}"
+    d:DataContext="{d:DesignInstance viewModel:ListContentViewModel}"
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
-    <Grid>
+    <Grid Background="Yellow">
         <ListBox
             Name="ItemsList"
             BorderBrush="Transparent"
             BorderThickness="0"
-            Items="{Binding InstanceFields}">
+            Items="{Binding Items}"
+            VirtualizationMode="Simple">
             <ListBox.ItemTemplate>
-                <DataTemplate DataType="viewModel:InstanceFieldViewModel">
-                    <StackPanel Orientation="Horizontal" >
+                <DataTemplate DataType="viewModel:ListItemViewModel">
+                    <StackPanel Orientation="Horizontal">
                         <i:Interaction.Behaviors>
                             <ia:EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #ItemsList}">
                                 <ia:CallMethodAction TargetObject="{Binding}" MethodName="Control_OnMouseDoubleClick"/>
@@ -27,18 +28,12 @@
                         </i:Interaction.Behaviors>
                         <TextBlock
                             Margin="0,0,5,0"
-                            Text="{Binding Name}" />
-
-                        <TextBlock
-                            Margin="0,0,5,0"
                             Text="{Binding
-                                TypeName,
-                                StringFormat='{}({0})'}" />
-
-                        <TextBlock
-                            Text="{Binding
-                                Value,
+                                Index,
                                 StringFormat='{}[{0}]'}" />
+
+                        <TextBlock Text="{Binding Item}" />
+
                     </StackPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>

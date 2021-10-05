@@ -40,9 +40,9 @@
             var assemblyTypes = assembly.GetLoadableTypes()
                 .Where(
                     t =>
-                        t.IsSubclassOf(typeof(Control))
+                        t.IsSubclassOf(typeof(UserControl))
                         && t.Name.EndsWith("View")
-                        && (t.GetConstructor(Array.Empty<Type>()) != default));
+                        /*&& (t.GetConstructor(Array.Empty<Type>()) != default)*/);
 
             foreach (var assemblyType in assemblyTypes)
             {
