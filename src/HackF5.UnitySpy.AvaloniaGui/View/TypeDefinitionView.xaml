@@ -33,6 +33,7 @@
                 Padding="8 0"
                 BorderBrush="Transparent"
                 BorderThickness="0"
+                Background="Green"
                 Command="{Binding PathBackCommand}">
                 Back
             </Button>

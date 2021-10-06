@@ -12,12 +12,15 @@
     public abstract class ProcessFacadeLinux : ProcessFacade
     {        
         private readonly List<MemoryMapping> mappings;
+
+        protected readonly int processId;
         
-        public ProcessFacadeLinux(string mapsFilePath, string gameExecutableFilePath)
-        {
+        public ProcessFacadeLinux(int processId, string gameExecutableFilePath)
+        {            
+            this.processId = processId;
             this.monoLibraryOffsets = MonoLibraryOffsets.GetOffsets(gameExecutableFilePath);
 
-            string[] mappingsInFile = File.ReadAllLines(mapsFilePath);
+            string[] mappingsInFile = File.ReadAllLines($"/proc/{processId}/maps");
             this.mappings = new List<MemoryMapping>(mappingsInFile.Length);
             string[] lineColumnValues;
             string[] memoryRegion;

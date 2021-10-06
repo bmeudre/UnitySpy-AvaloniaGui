@@ -10,13 +10,10 @@
     /// </summary>
     [PublicAPI]
     public class ProcessFacadeLinuxPTrace : ProcessFacadeLinux
-    {
-        private readonly int processId;
-        
-        public ProcessFacadeLinuxPTrace(int processId, string mapsFilePath, string gameExecutableFilePath)
-            : base(mapsFilePath, gameExecutableFilePath)
+    {        
+        public ProcessFacadeLinuxPTrace(int processId, string gameExecutableFilePath)
+            : base(processId, gameExecutableFilePath)
         {
-            this.processId = processId;
         }
 
         protected unsafe override void ReadProcessMemory(

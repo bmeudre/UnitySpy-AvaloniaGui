@@ -190,14 +190,15 @@ int main(int argc, char *argv[])
         }
 	}
 	
+    puts("Exiting...");
+    fflush(stdout);
+    
     if (new_socket < 0)
 	{
 		perror("accept failed");
 		return 1;
 	}
 
-    puts("Exiting...");
-    fflush(stdout);
 	
 	return 0;
 }

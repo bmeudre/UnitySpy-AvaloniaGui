@@ -1,16 +1,18 @@
-﻿<FluentWindow xmlns="https://github.com/avaloniaui"
+﻿<FluentWindow 
+        x:Class="HackF5.UnitySpy.AvaloniaGui.View.MainWindow"
+        xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:HackF5.UnitySpy.AvaloniaGui.ViewModel;assembly=HackF5.UnitySpy.AvaloniaGui"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="1350" d:DesignHeight="700" Height="600" Width="900"
         xmlns:view="clr-namespace:HackF5.UnitySpy.AvaloniaGui.View"
-        x:Class="HackF5.UnitySpy.AvaloniaGui.View.MainWindow"
+        mc:Ignorable="d" d:DesignWidth="1350" d:DesignHeight="700" Height="600" Width="900"
         Icon="{x:Null}"
         x:Name="MainWindow"
         WindowStartupLocation="CenterScreen"
         Background="{x:Null}"
         Title="MTGA Memory Reader">
+
   <FluentWindow.Styles>
     <Style Selector="TitleBar:fullscreen">
       <Setter Property="Background" Value="#7f000000" />
@@ -36,9 +38,20 @@
         <RowDefinition Height="Auto"/>
         <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
-
+      
+      <TextBlock Margin="2" Grid.Column="0" Grid.Row="1" IsVisible="{Binding IsLinux, Mode=OneTime}">Mode</TextBlock>   
       <ComboBox 
         Grid.Row="0"
+        Grid.Column="1"
+        IsVisible="{Binding IsLinux}" SelectedIndex="{Binding LinuxModeSelectedIndex}">
+          <ComboBoxItem>Client (user access) - server.c (root access)</ComboBoxItem>
+          <ComboBoxItem>PTrace (process_vm_readv)</ComboBoxItem>
+          <ComboBoxItem>Direct (root access)</ComboBoxItem>
+      </ComboBox>
+
+      <TextBlock Margin="2" Grid.Column="1" Grid.Row="1">Process</TextBlock>
+      <ComboBox 
+        Grid.Row="1"
         Grid.Column="1"
         Classes="header" 
         x:Name="processesComboBox" 
@@ -55,21 +68,19 @@
 
       <Button Margin="2" Grid.Column="2" Grid.Row="0" Command="{Binding RefreshProcesses}">Refresh</Button>
 
-      <TextBlock Margin="2" Grid.Column="0" Grid.Row="1" IsVisible="{Binding IsLinux, Mode=OneTime}" >Mem File</TextBlock>
-      <TextBox   Margin="2" Grid.Column="1" Grid.Row="1" IsVisible="{Binding IsLinux, Mode=OneTime}" Text="{Binding MemPseudoFilePath, Mode=TwoWay}" />
-      <Button    Margin="2" Grid.Column="2" Grid.Row="1" IsVisible="{Binding IsLinux, Mode=OneTime}" Command="{Binding OpenMemPseudoFile}">Open</Button>
-      <TextBlock Margin="2" Grid.Column="0" Grid.Row="2" IsVisible="{Binding IsLinux, Mode=OneTime}" >Maps File</TextBlock>
-      <TextBox   Margin="2" Grid.Column="1" Grid.Row="2" IsVisible="{Binding IsLinux, Mode=OneTime}" Text="{Binding MapsPseudoFilePath, Mode=TwoWay}" />
-      <Button    Margin="2" Grid.Column="2" Grid.Row="2" IsVisible="{Binding IsLinux, Mode=OneTime}" Command="{Binding OpenMapsPseudoFile}">Open</Button>
-      <TextBlock Margin="2" Grid.Column="0" Grid.Row="3" IsVisible="{Binding IsLinux, Mode=OneTime}" >Game Executable File</TextBlock>
-      <TextBox   Margin="2" Grid.Column="1" Grid.Row="3" IsVisible="{Binding IsLinux, Mode=OneTime}" Text="{Binding GameExecutableFilePath, Mode=TwoWay}" />
-      <Button    Margin="2" Grid.Column="2" Grid.Row="3" IsVisible="{Binding IsLinux, Mode=OneTime}" Command="{Binding OpenGameExecutableFile}">Open</Button>
-      <Button    Margin="2" Grid.Column="0" Grid.Row="4" IsVisible="{Binding IsLinux, Mode=OneTime}" Command="{Binding BuildImageAssembly}">Read</Button>
+      <TextBlock Margin="2" Grid.Column="0" Grid.Row="2" IsVisible="{Binding IsDirectMode, Mode=OneWay}" >Mem File</TextBlock>
+      <TextBox   Margin="2" Grid.Column="1" Grid.Row="2" IsVisible="{Binding IsDirectMode, Mode=OneWay}" Text="{Binding MemPseudoFilePath, Mode=TwoWay}" />
+      <Button    Margin="2" Grid.Column="2" Grid.Row="2" IsVisible="{Binding IsDirectMode, Mode=OneWay}" Command="{Binding OpenMemPseudoFile}">Open</Button>
+
+      <TextBlock Margin="2" Grid.Column="0" Grid.Row="4" IsVisible="{Binding isLinux, Mode=OneTime}" >Game Executable File</TextBlock>
+      <TextBox   Margin="2" Grid.Column="1" Grid.Row="4" IsVisible="{Binding isLinux, Mode=OneTime}" Text="{Binding GameExecutableFilePath, Mode=TwoWay}" />
+      <Button    Margin="2" Grid.Column="2" Grid.Row="4" IsVisible="{Binding isLinux, Mode=OneTime}" Command="{Binding OpenGameExecutableFile}">Open</Button>
+      
+      <Button    Margin="2" Grid.Column="0" Grid.Row="5" IsVisible="{Binding IsLinux, Mode=OneTime}" Command="{Binding BuildImageAssembly}">Read</Button>
 
     </Grid>
 
-    <view:AssemblyImageView
-        DataContext="{Binding Image}" />
+    <view:AssemblyImageView DataContext="{Binding Image}" />
 
   </DockPanel>
 

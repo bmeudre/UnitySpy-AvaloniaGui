@@ -7,6 +7,7 @@
     using System.IO;
     using System.Linq;
     using System.Reactive;
+    using System.Runtime.InteropServices;
     using System.Threading.Tasks;
     using Avalonia.Controls;
     using HackF5.UnitySpy.Detail;
@@ -24,9 +25,9 @@
         
         private readonly MainWindow mainWindow;
 
-        private string memPseudoFilePath;
+        private int linuxModeSelectedIndex = 0;
 
-        private string mapsPseudoFilePath;
+        private string memPseudoFilePath;
 
         private string gameExecutableFilePath;        
         
@@ -38,15 +39,16 @@
             this.processesCollection = new ObservableCollection<ProcessViewModel>();
             this.RefreshProcesses = ReactiveCommand.Create(this.StartRefresh);
             this.OpenMemPseudoFile = ReactiveCommand.Create(this.StartOpenMemPseudoFile);  
-            this.OpenMapsPseudoFile = ReactiveCommand.Create(this.StartOpenMapsPseudoFile);  
             this.OpenGameExecutableFile = ReactiveCommand.Create(this.StartOpenGameExecutableFile);   
             this.BuildImageAssembly = ReactiveCommand.Create(this.StartBuildImageAssembly);
             this.commandCollection = new CommandCollection();  
         }       
 
-        public bool IsWindows => Environment.OSVersion.Platform == PlatformID.Win32NT; 
+        public bool IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows); 
 
-        public bool IsLinux => Environment.OSVersion.Platform == PlatformID.Unix;    
+        public bool IsLinux => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+
+        public bool IsOSX => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);   
         
         public ObservableCollection<ProcessViewModel> Processes => this.processesCollection;
 
@@ -64,8 +66,7 @@
                     }
                     else if(IsLinux)
                     {
-                        this.MapsPseudoFilePath = $"/proc/{value.Id}/maps";
-                        this.GameExecutableFilePath = $"/proc/{value.Id}/exe";
+                        this.MemPseudoFilePath = $"/proc/{value.Id}/mem";
                     }
                 }
             }
@@ -76,18 +77,23 @@
             get => this.memPseudoFilePath;
             set => this.RaiseAndSetIfChanged(ref this.memPseudoFilePath, value);
         }
-        
-        public string MapsPseudoFilePath
-        {
-            get => this.mapsPseudoFilePath;
-            set => this.RaiseAndSetIfChanged(ref this.mapsPseudoFilePath, value);
-        }
                                 
         public string GameExecutableFilePath
         {
             get => this.gameExecutableFilePath;
             set => this.RaiseAndSetIfChanged(ref this.gameExecutableFilePath, value);
         }
+                                
+        public int LinuxModeSelectedIndex
+        {
+            get => this.linuxModeSelectedIndex;
+            set {
+                this.RaiseAndSetIfChanged(ref this.linuxModeSelectedIndex, value); 
+                this.RaisePropertyChanged(nameof(IsLinuxDirectMode)); 
+            }
+        }
+
+        public bool IsLinuxDirectMode => IsLinux && LinuxModeSelectedIndex == 2;
 
         public AssemblyImageViewModel Image
         {
@@ -98,9 +104,7 @@
         public ReactiveCommand<Unit, Unit> RefreshProcesses { get; }
         
         public ReactiveCommand<Unit, Unit> OpenMemPseudoFile { get; }
-        
-        public ReactiveCommand<Unit, Unit> OpenMapsPseudoFile { get; }
-        
+                
         public ReactiveCommand<Unit, Unit> OpenGameExecutableFile { get; }
         
         public ReactiveCommand<Unit, Unit> BuildImageAssembly { get; }
@@ -115,11 +119,6 @@
             Task.Run(this.ExecuteOpenMemPseudoFileCommand);
         }
 
-        private void StartOpenMapsPseudoFile() 
-        {
-            Task.Run(this.ExecuteOpenMapsPseudoFileCommand);
-        }
-
         private void StartOpenGameExecutableFile() 
         {
             Task.Run(this.ExecuteOpenGameExecutableFileCommand);
@@ -127,8 +126,6 @@
 
         private void StartBuildImageAssembly() 
         {            
-
-            Console.WriteLine("Starting to build Image...");
             BuildImageAsync();
             ///Task.Run(() => BuildImageAsync());
         }
@@ -157,16 +154,6 @@
 			}
 		}
         
-        private async void ExecuteOpenMapsPseudoFileCommand()
-		{
-			OpenFileDialog dlg = new OpenFileDialog();
-			var filenames = await this.ShowOpenFileDialog("Open /proc/$pid/maps pseudo-file", this.mapsPseudoFilePath);
-			if (filenames != null && filenames.Length > 0)
-			{
-                this.MapsPseudoFilePath = filenames[0];
-			}
-		}
-        
         private async void ExecuteOpenGameExecutableFileCommand()
 		{
 			OpenFileDialog dlg = new OpenFileDialog();
@@ -192,25 +179,40 @@
         private void /*async Task*/ BuildImageAsync()
         {
 
-            Console.WriteLine("Building Image...");
-            IAssemblyImage assemblyImage;
+            IAssemblyImage assemblyImage;            
             try
             {           
+                ProcessFacade processFacade;
                 if(IsWindows)      
                 {
-                    assemblyImage = AssemblyImageFactory.Create(this.selectedProcess.Id);
+                    processFacade = new ProcessFacadeWindows(this.selectedProcess.Id);
+                }
+                else if(IsOSX)
+                {   
+                    processFacade = new ProcessFacadeOSX(this.selectedProcess.Id);
                 }
                 else if(IsLinux)
                 {
-                    // ProcessFacade process = new ProcessFacadeLinuxDirect(this.selectedProcess.Id, this.MapsPseudoFilePath, this.GameExecutableFilePath);
-                    // assemblyImage = AssemblyImageFactory.Create(process);
-                    
-                    assemblyImage = AssemblyImageFactory.Create(this.MapsPseudoFilePath, this.GameExecutableFilePath);
+                    switch(LinuxModeSelectedIndex)
+                    {
+                        case 0: 
+                            processFacade = new ProcessFacadeLinuxClient(this.selectedProcess.Id, this.GameExecutableFilePath);
+                            break;
+                        case 1: 
+                            processFacade = new ProcessFacadeLinuxPTrace(this.selectedProcess.Id, this.GameExecutableFilePath);
+                            break;
+                        case 2: 
+                            processFacade = new ProcessFacadeLinuxDirect(this.selectedProcess.Id, this.MemPseudoFilePath, this.GameExecutableFilePath);
+                            break;
+                        default: 
+                            throw new NotSupportedException("Linux mode not supported");
+                    }
                 }
                 else
                 {
                     throw new NotSupportedException("Platform not supported");
                 }
+                assemblyImage = AssemblyImageFactory.Create(processFacade);
             }
             catch (Exception ex)
             {

@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Threading.Tasks;
     using HackF5.UnitySpy.Gui.Mvvm;
+    using HackF5.UnitySpy.Detail;
 
     public class MainViewModel : PropertyChangedBase
     {
@@ -57,7 +58,8 @@
         {
             try
             {
-                this.Image = this.imageFactory(AssemblyImageFactory.Create(process.ProcessId));
+                ProcessFacade processFacade = new ProcessFacadeWindows(process.ProcessId);
+                this.Image = this.imageFactory(AssemblyImageFactory.Create(processFacade));
             }
             catch (Exception ex)
             {

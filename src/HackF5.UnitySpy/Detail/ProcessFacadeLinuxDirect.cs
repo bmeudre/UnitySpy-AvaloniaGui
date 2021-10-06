@@ -12,8 +12,8 @@
     {
         private readonly string memFilePath;
         
-        public ProcessFacadeLinuxDirect(string memFilePath, string mapsFilePath, string gameExecutableFilePath)
-            : base(mapsFilePath, gameExecutableFilePath)
+        public ProcessFacadeLinuxDirect(int processId, string memFilePath, string gameExecutableFilePath)
+            : base(processId, gameExecutableFilePath)
         {
             this.memFilePath = memFilePath;
         }
