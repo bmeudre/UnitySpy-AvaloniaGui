@@ -67,7 +67,6 @@
 
         <view:TypeDefinitionView
             Grid.Column="2"
-            Background="White"
             DataContext="{Binding SelectedType}" />
     </Grid>
 </UserControl>

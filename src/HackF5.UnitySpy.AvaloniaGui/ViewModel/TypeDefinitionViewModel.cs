@@ -5,6 +5,7 @@
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
+    using System.Reactive;
     using System.Threading.Tasks;
     using HackF5.UnitySpy.AvaloniaGui.Mvvm;
     using JetBrains.Annotations;
@@ -48,6 +49,12 @@
             var model = this.typeDefinitionContentFactory(this.definition);
             model.AppendToTrail += this.ModelOnAppendToTrail;
             this.content = model;
+
+            //IObservable<bool> iObs => new IObservable<bo>
+
+            //this.PathBackCommand = ReactiveCommand.CreateFromTask(this.ExecutePathBackAsync, this.CanExecutePathBack); 
+            //this.PathBackCommand = ReactiveCommand.Create(this.ExecutePathBackAsync, x => this.CanExecutePathBack);
+            this.PathBackCommand = new ReactiveCommand<Task>(this.ExecutePathBackAsync, x => this.CanExecutePathBack);
         }
 
         public delegate TypeDefinitionViewModel Factory(ITypeDefinition definition);
@@ -82,12 +89,15 @@
             }
         }
 
-        public AsyncCommand PathBackCommand =>
-            this.commands.CreateAsyncCommand(this.ExecutePathBackAsync, this.CanExecutePathBack);
+
+        public ReactiveCommand<Unit, Unit> PathBackCommand { get; }
+
+        // public AsyncCommand PathBackCommand =>
+        //     this.commands.CreateAsyncCommand(this.ExecutePathBackAsync, this.CanExecutePathBack);
 
         public ObservableCollection<string> Trail { get; } = new ObservableCollection<string>();
 
-        private bool CanExecutePathBack() => this.Trail.Count > 2;
+        private bool CanExecutePathBack => this.Trail.Count > 2;
 
         private async Task ExecutePathBackAsync()
         {
