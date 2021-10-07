@@ -246,19 +246,17 @@
 
             this.Image = new AssemblyImageViewModel(assemblyImage, typeDefFactory);
 
-            Console.WriteLine("========= Loaded types =========");
-
             bool hasPapa = false;
             foreach(var type in assemblyImage.TypeDefinitions)
             {
-                Console.WriteLine($"Type Name: {type.Name}");
                 if(type.Name.StartsWith("PAPA")) 
                 {
                     hasPapa = true;
+                    break;
                 }
             }
 
-            Console.WriteLine($"========= Has PAPA = {hasPapa} =========");
+            Console.WriteLine($"========= Type Definitions Read = {assemblyImage.TypeDefinitions.Count()} Has PAPA = {hasPapa} =========");
         }    
     }
 }

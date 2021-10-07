@@ -136,8 +136,7 @@ void *connection_handler(void* socket_ptr)
                         break;
                     }
                 }
-                printf("memory chunk sent to the client!\n");
-            } while(recv(socket, request, REQUEST_SIZE, 0) >= 0);
+            } while(recv(socket, request, REQUEST_SIZE, 0) > 0);
 
             puts("recv failed");
             fclose(fp);
@@ -176,7 +175,7 @@ int main(int argc, char *argv[])
 	puts("bind done");
 	
 	//Listen
-	listen(socket_desc , 3);
+	listen(socket_desc, 3);
 	
 	//Accept and incoming connection
 	puts("Waiting for incoming connections...");

@@ -6,6 +6,7 @@
     using System.Collections.ObjectModel;
     using System.Linq;
     using System.Reactive;
+    using System.Reactive.Linq;
     using System.Threading.Tasks;
     using HackF5.UnitySpy.AvaloniaGui.Mvvm;
     using JetBrains.Annotations;
@@ -49,13 +50,12 @@
             var model = this.typeDefinitionContentFactory(this.definition);
             model.AppendToTrail += this.ModelOnAppendToTrail;
             this.content = model;
-
-            //IObservable<bool> iObs => new IObservable<bo>
-
-            //this.PathBackCommand = ReactiveCommand.CreateFromTask(this.ExecutePathBackAsync, this.CanExecutePathBack); 
-            //this.PathBackCommand = ReactiveCommand.Create(this.ExecutePathBackAsync, x => this.CanExecutePathBack);
-            this.PathBackCommand = new ReactiveCommand<Task>(this.ExecutePathBackAsync, x => this.CanExecutePathBack);
+            
+            IObservable<bool> canExecute = this.WhenAnyValue(x => x.CanExecutePathBack);
+            this.PathBackCommand = ReactiveCommand.CreateFromTask(this.ExecutePathBackAsync, canExecute); 
         }
+
+        private IObservable<bool> canExecute;
 
         public delegate TypeDefinitionViewModel Factory(ITypeDefinition definition);
 
@@ -74,26 +74,18 @@
             get => this.path;
             set
             {
-                // if (!this.SetProperty(ref this.path, value))
-                // {
-                //     return;
-                // }
-
-                // this.ParsePath(this.Path ?? string.Empty);
                 if(this.path != value)
                 {
                     this.RaiseAndSetIfChanged(ref this.path, value);
 
                     this.ParsePath(this.Path ?? string.Empty);
+
+                    this.RaisePropertyChanged(nameof(CanExecutePathBack));
                 }
             }
         }
 
-
         public ReactiveCommand<Unit, Unit> PathBackCommand { get; }
-
-        // public AsyncCommand PathBackCommand =>
-        //     this.commands.CreateAsyncCommand(this.ExecutePathBackAsync, this.CanExecutePathBack);
 
         public ObservableCollection<string> Trail { get; } = new ObservableCollection<string>();
 

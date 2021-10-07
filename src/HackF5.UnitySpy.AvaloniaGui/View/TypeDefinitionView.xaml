@@ -32,7 +32,6 @@
                 Margin="2"
                 BorderBrush="Transparent"
                 BorderThickness="0"
-                Background="Green"
                 Command="{Binding PathBackCommand}">
                 Back
             </Button>
@@ -40,11 +39,7 @@
                 Name="PathTextBox"
                 Padding="-1, 5, 0, 5"
                 VerticalAlignment="Center"
-                Background="LightGray"
-                BorderBrush="Transparent"
-                BorderThickness="0"
                 FontWeight="Bold"
-                Foreground="Black"
                 Text="{Binding Path}" />
         </DockPanel>
         <ListBox

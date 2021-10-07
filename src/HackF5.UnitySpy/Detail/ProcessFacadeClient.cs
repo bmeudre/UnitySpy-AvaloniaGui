@@ -87,7 +87,7 @@
 
         private void CloseConnection() 
         {
-            if(socket != null) 
+            if(this.socket != null) 
             {
                 Console.WriteLine("Disconnecting from server...");   
                 try

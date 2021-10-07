@@ -28,9 +28,6 @@
                 Name="ListViewFilter"
                 DockPanel.Dock="Top"
                 Padding="5"
-                Background="Black"
-                BorderBrush="Transparent"
-                BorderThickness="0"
                 Foreground="Yellow"
                 Text="{Binding ListViewFilter}" />
             <CheckBox
