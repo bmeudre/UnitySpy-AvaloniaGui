@@ -2,9 +2,9 @@
 namespace HackF5.UnitySpy.Detail
 {
     using System;
-    using System.Reflection;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Runtime.InteropServices;
     using System.IO;
 
     public class MonoLibraryOffsets
@@ -161,42 +161,67 @@ namespace HackF5.UnitySpy.Detail
 
         public static MonoLibraryOffsets GetOffsets(string gameExecutableFilePath, bool force = true)
         {
-            var peHeader = new PeNet.PeFile(gameExecutableFilePath);
-            string unityVersion = peHeader.Resources.VsVersionInfo.StringFileInfo.StringTable[0].FileVersion;
-            
-            // Taken from here https://stackoverflow.com/questions/1001404/check-if-unmanaged-dll-is-32-bit-or-64-bit;
-            // See http://www.microsoft.com/whdc/system/platform/firmware/PECOFF.mspx
-            // Offset to PE header is always at 0x3C.
-            // The PE header starts with "PE\0\0" =  0x50 0x45 0x00 0x00,
-            // followed by a 2-byte machine type field (see the document above for the enum).
-            //
-            FileStream fs = new FileStream(gameExecutableFilePath, FileMode.Open, FileAccess.Read);
-            BinaryReader br = new BinaryReader(fs);
-            fs.Seek(0x3c, SeekOrigin.Begin);
-            Int32 peOffset = br.ReadInt32();
-            fs.Seek(peOffset, SeekOrigin.Begin);
-            UInt32 peHead = br.ReadUInt32();
+            string unityVersion;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
+                FileInfo gameExecutableFile = new FileInfo(gameExecutableFilePath);
+                string infoPlist = File.ReadAllText(gameExecutableFile.Directory.Parent.FullName + "/Info.plist");
+                string[] unityPlayerSplit = infoPlist.Split("Unity Player version ");
+                unityVersion = unityPlayerSplit[1].Split(" ")[0];
 
-            if (peHead != 0x00004550) // "PE\0\0", little-endian
-            {
-                throw new Exception("Can't find PE header");
+                // Start the child process.
+                Process p = new Process();
+                // Redirect the output stream of the child process.
+                p.StartInfo.UseShellExecute = false;
+                p.StartInfo.RedirectStandardOutput = true;
+                p.StartInfo.FileName = "file";
+                p.StartInfo.Arguments = gameExecutableFilePath;
+                p.Start();
+                // Do not wait for the child process to exit before
+                // reading to the end of its redirected stream.
+                // p.WaitForExit();
+                // Read the output stream first and then wait.
+                string output = p.StandardOutput.ReadToEnd();
+                p.WaitForExit();
+                return GetOffsets(unityVersion, output.EndsWith("x86_64\n"), force);
             }
-
-            int machineType = br.ReadUInt16();
-            br.Close();
-            fs.Close();
-
-            Console.WriteLine($"game file closed");
-
-            switch (machineType)
+            else
             {
-                case 0x8664: // IMAGE_FILE_MACHINE_AMD64
-                    return GetOffsets(unityVersion, true, force);
-                case 0x14c: // IMAGE_FILE_MACHINE_I386
-                    return GetOffsets(unityVersion, false, force);
-                default:
-                    throw new NotSupportedException("Platform not supported");
+                var peHeader = new PeNet.PeFile(gameExecutableFilePath);
+                unityVersion = peHeader.Resources.VsVersionInfo.StringFileInfo.StringTable[0].FileVersion;
+
+                // Taken from here https://stackoverflow.com/questions/1001404/check-if-unmanaged-dll-is-32-bit-or-64-bit;
+                // See http://www.microsoft.com/whdc/system/platform/firmware/PECOFF.mspx
+                // Offset to PE header is always at 0x3C.
+                // The PE header starts with "PE\0\0" =  0x50 0x45 0x00 0x00,
+                // followed by a 2-byte machine type field (see the document above for the enum).
+                //
+                FileStream fs = new FileStream(gameExecutableFilePath, FileMode.Open, FileAccess.Read);
+                BinaryReader br = new BinaryReader(fs);
+                fs.Seek(0x3c, SeekOrigin.Begin);
+                Int32 peOffset = br.ReadInt32();
+                fs.Seek(peOffset, SeekOrigin.Begin);
+                UInt32 peHead = br.ReadUInt32();
+
+                if (peHead != 0x00004550) // "PE\0\0", little-endian
+                {
+                    throw new Exception("Can't find PE header");
+                }
+
+                int machineType = br.ReadUInt16();
+                br.Close();
+                fs.Close();
+
+                Console.WriteLine($"game file closed");
+
+                switch (machineType)
+                {
+                    case 0x8664: // IMAGE_FILE_MACHINE_AMD64
+                        return GetOffsets(unityVersion, true, force);
+                    case 0x14c: // IMAGE_FILE_MACHINE_I386
+                        return GetOffsets(unityVersion, false, force);
+                }
             }
+            throw new NotSupportedException("Platform not supported");
         }
 
         public static MonoLibraryOffsets GetOffsets(string unityVersion, bool is64Bits, bool force = true)
@@ -264,7 +289,7 @@ namespace HackF5.UnitySpy.Detail
                     }
                 }
 
-                string mode = is64Bits ? "in 64 bits mode" : "in 32 Bits mode";
+                string mode = is64Bits ? "in 64 bits mode" : "in 32 bits mode";
                 throw new NotSupportedException($"The unity version the process is running " +
                     $"({unityVersion} {mode}) is not supported");
             }

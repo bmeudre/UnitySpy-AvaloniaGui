@@ -60,7 +60,7 @@
                 if (this.selectedProcess != value) 
                 {
                     this.RaiseAndSetIfChanged(ref this.selectedProcess, value);
-                    if(this.IsWindows)
+                    if(this.IsWindows || this.IsOSX)
                     {
                         this.StartBuildImageAssembly();
                     }
