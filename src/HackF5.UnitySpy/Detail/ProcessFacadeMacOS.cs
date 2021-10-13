@@ -6,19 +6,16 @@
     using JetBrains.Annotations;
 
     /// <summary>
-    /// A Windows specific facade over a process that provides access to its memory space.
+    /// A MacOS specific facade over a process that provides access to its memory space.
     /// </summary>
     [PublicAPI]
-    public class ProcessFacadeOSX : ProcessFacade
+    public class ProcessFacadeMacOS : ProcessFacade
     {        
         protected readonly Process process;
-
-        private readonly ProcessFacadeClient client;
         
-        public ProcessFacadeOSX(int processId)
+        public ProcessFacadeMacOS(int processId)
         {            
             this.process = Process.GetProcessById(processId);
-            this.client = new ProcessFacadeClient();
             this.monoLibraryOffsets = MonoLibraryOffsets.GetOffsets(this.process.MainModule.FileName);
         }
                 
@@ -33,7 +30,7 @@
             try
             {
                 var bufferPointer = Marshal.UnsafeAddrOfPinnedArrayElement(buffer, 0);
-                if (0 != ProcessFacadeOSX.ReadProcessMemory(
+                if (0 != ProcessFacadeMacOS.ReadProcessMemory(
                     this.process.Id,
                     processAddress,
                     bufferPointer,

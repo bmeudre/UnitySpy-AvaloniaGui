@@ -42,13 +42,14 @@
             this.OpenGameExecutableFile = ReactiveCommand.Create(this.StartOpenGameExecutableFile);   
             this.BuildImageAssembly = ReactiveCommand.Create(this.StartBuildImageAssembly);
             this.commandCollection = new CommandCollection();  
+            this.StartRefresh();
         }       
 
         public bool IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows); 
 
         public bool IsLinux => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 
-        public bool IsOSX => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);   
+        public bool IsMacOS => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);   
         
         public ObservableCollection<ProcessViewModel> Processes => this.processesCollection;
 
@@ -60,7 +61,7 @@
                 if (this.selectedProcess != value) 
                 {
                     this.RaiseAndSetIfChanged(ref this.selectedProcess, value);
-                    if(this.IsWindows || this.IsOSX)
+                    if(this.IsWindows || this.IsMacOS)
                     {
                         this.StartBuildImageAssembly();
                     }
@@ -187,9 +188,9 @@
                 {
                     processFacade = new ProcessFacadeWindows(this.selectedProcess.Id);
                 }
-                else if(IsOSX)
+                else if(IsMacOS)
                 {   
-                    processFacade = new ProcessFacadeOSX(this.selectedProcess.Id);
+                    processFacade = new ProcessFacadeMacOS(this.selectedProcess.Id);
                 }
                 else if(IsLinux)
                 {
