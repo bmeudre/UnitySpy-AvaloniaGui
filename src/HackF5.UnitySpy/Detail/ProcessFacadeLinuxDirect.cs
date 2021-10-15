@@ -23,15 +23,12 @@
             IntPtr processAddress,
             int length)
         {            
-            using(FileStream memFileStream = new FileStream(memFilePath, FileMode.Create))
+            using(FileStream memFileStream = new FileStream(memFilePath, FileMode.Open))
             {
-                // Write the data to the file, byte by byte.
-                for(int i = 0; i < length; i++)
+                memFileStream.Seek(processAddress.ToInt64(), 0);
+                if(length != memFileStream.Read(buffer, 0, length))
                 {
-                    if(buffer[i] != memFileStream.ReadByte())
-                    {
-                        throw new Exception("Error reading data from "+memFilePath);
-                    }
+                    throw new Exception("Error reading data from "+memFilePath);
                 }
             }
         }

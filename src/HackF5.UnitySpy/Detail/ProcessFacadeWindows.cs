@@ -21,10 +21,9 @@
 
         private readonly Process process;
         
-        public ProcessFacadeWindows(int processId) : base()
+        public ProcessFacadeWindows(Process process) : base()
         {
-            this.process = Process.GetProcessById(processId);
-            this.monoLibraryOffsets = MonoLibraryOffsets.GetOffsets(Native.GetMainModuleFileName(process));
+            this.process = process;
         }
 
         public Process Process => process;
@@ -51,7 +50,7 @@
             return result;
         }
 
-        protected override void ReadProcessMemory(
+        public override void ReadProcessMemory(
             byte[] buffer,
             IntPtr processAddress,
             bool allowPartialRead = false,
@@ -99,17 +98,6 @@
             IntPtr hModule,
             out ModuleInformation lpModInfo,
             uint cb);
-        #endregion
-
-        #region Windows Kernel calls
-
-        [DllImport("kernel32", SetLastError = true)]
-        private static extern bool ReadProcessMemory(
-            IntPtr hProcess,
-            IntPtr lpBaseAddress,
-            IntPtr lpBuffer,
-            int nSize,
-            out IntPtr lpNumberOfBytesRead);
 
         // https://stackoverflow.com/questions/36431220/getting-a-list-of-dlls-currently-loaded-in-a-process-c-sharp
         [DllImport(ProcessFacadeWindows.PsApiDll, SetLastError = true)]
@@ -123,14 +111,42 @@
 
         #endregion
 
+        #region Windows Kernel calls
+
+        [DllImport("kernel32", SetLastError = true)]
+        private static extern bool ReadProcessMemory(
+            IntPtr hProcess,
+            IntPtr lpBaseAddress,
+            IntPtr lpBuffer,
+            int nSize,
+            out IntPtr lpNumberOfBytesRead);
+
+        // https://stackoverflow.com/questions/5497064/how-to-get-the-full-path-of-running-process
+        [DllImport("Kernel32.dll")]
+        private static extern bool QueryFullProcessImageName([In] IntPtr hProcess, [In] uint dwFlags, [Out] StringBuilder lpExeName, [In, Out] ref uint lpdwSize);
+
+        public string GetMainModuleFileName(int buffer = 1024)
+        {
+            var fileNameBuilder = new StringBuilder(buffer);
+            uint bufferLength = (uint)fileNameBuilder.Capacity + 1;
+            return QueryFullProcessImageName(this.process.Handle, 0, fileNameBuilder, ref bufferLength) ?
+                fileNameBuilder.ToString() :
+                null;
+        }
+
+        #endregion
+
         // https://stackoverflow.com/questions/36431220/getting-a-list-of-dlls-currently-loaded-in-a-process-c-sharp
         // TODO add check for matching platforms and implement the following code while keeping the existing one otherwise:
         // This can be done with this if the process is running in 64 bits mode (and UnitySpy too of course)
-        // foreach(ProcessModule module in process.Process.Modules) {
-        //    if(module.ModuleName == "mono-2.0-bdwgc.dll") {
+        // foreach(ProcessModule module in process.Process.Modules) 
+        // {
+        //    if(module.ModuleName == moduleName) 
+        //    {
         //        return new ModuleInfo(module.ModuleName, module.BaseAddress, module.ModuleMemorySize);
-        //    }            
-        public override ModuleInfo GetMonoModule()
+        //    } 
+        // }           
+        public override ModuleInfo GetModule(string moduleName)
         {
             var modulePointers = this.GetModulePointers();
 
@@ -150,7 +166,7 @@
                     throw new COMException("Failed to get module file name.", Marshal.GetLastWin32Error());
                 }
 
-                var moduleName = Path.GetFileName(moduleFilePath.ToString());
+                var currentModuleName = Path.GetFileName(moduleFilePath.ToString());
                 GetModuleInformation(
                     this.process.Handle,
                     modulePointer,
@@ -158,11 +174,11 @@
                     (uint)(IntPtr.Size * modulePointers.Length));
 
                 // Convert to a normalized module and add it to our list
-                var module = new ModuleInfo(moduleName, moduleInformation.BaseOfDll, moduleInformation.SizeInBytes);
+                var module = new ModuleInfo(currentModuleName, moduleInformation.BaseOfDll, moduleInformation.SizeInBytes);
                 modules.Add(module);
             }
 
-            return modules.FirstOrDefault(module => module.ModuleName == this.monoLibraryOffsets.MonoLibraryName);
+            return modules.FirstOrDefault(module => module.ModuleName == moduleName);
         }
 
         [StructLayout(LayoutKind.Sequential)]

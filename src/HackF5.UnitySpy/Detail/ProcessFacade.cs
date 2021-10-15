@@ -10,31 +10,22 @@
     /// </summary>
     [PublicAPI]
     public abstract class ProcessFacade
-    {
-        protected MonoLibraryOffsets monoLibraryOffsets;
+    {   
+        public bool Is64Bits { get; set; }
 
-        public MonoLibraryOffsets MonoLibraryOffsets => this.monoLibraryOffsets;
+        public int SizeOfPtr => this.Is64Bits ? 8 : 4;
 
-        public int SizeOfPtr => this.monoLibraryOffsets.Is64Bits ? 8 : 4;
-
-        public bool Is64Bits => this.monoLibraryOffsets.Is64Bits;
-
-        public string ReadAsciiString(IntPtr address, int maxSize = 1024)
-        {
-            return this.ReadBufferValue(address, maxSize, b => b.ToAsciiString());
-        }
-
+        public string ReadAsciiString(IntPtr address, int maxSize = 1024) =>
+            this.ReadBufferValue(address, maxSize, b => b.ToAsciiString());
+            
         public string ReadAsciiStringPtr(IntPtr address, int maxSize = 1024) =>
             this.ReadAsciiString(this.ReadPtr(address), maxSize);
 
-        public int ReadInt32(IntPtr address)
-        {
-            return this.ReadBufferValue(address, sizeof(int), b => b.ToInt32());
-        }
-        public long ReadInt64(IntPtr address)
-        {
-            return this.ReadBufferValue(address, sizeof(long), b => b.ToInt64());
-        }
+        public int ReadInt32(IntPtr address) =>
+            this.ReadBufferValue(address, sizeof(int), b => b.ToInt32());
+
+        public long ReadInt64(IntPtr address) =>
+            this.ReadBufferValue(address, sizeof(long), b => b.ToInt64());
 
         public object ReadManaged([NotNull] TypeInfo type, IntPtr address)
         {
@@ -147,33 +138,28 @@
             }
         }
 
-        public byte[] ReadModule([NotNull] ModuleInfo monoModuleInfo)
+        public IntPtr ReadPtr(IntPtr address) =>
+            (IntPtr)(this.Is64Bits ? this.ReadUInt64(address) : this.ReadUInt32(address));
+
+        public uint ReadUInt32(IntPtr address) =>
+            this.ReadBufferValue(address, sizeof(uint), b => b.ToUInt32());
+
+        public ulong ReadUInt64(IntPtr address) =>
+            this.ReadBufferValue(address, sizeof(ulong), b => b.ToUInt64());
+
+        public byte ReadByte(IntPtr address) =>
+            this.ReadBufferValue(address, sizeof(byte), b => b.ToByte());
+
+        public byte[] ReadModule([NotNull] ModuleInfo moduleInfo)
         {
-            if (monoModuleInfo == null)
+            if (moduleInfo == null)
             {
-                throw new ArgumentNullException(nameof(monoModuleInfo));
+                throw new ArgumentNullException(nameof(moduleInfo));
             }
 
-            var buffer = new byte[monoModuleInfo.Size];
-            this.ReadProcessMemory(buffer, monoModuleInfo.BaseAddress);
+            var buffer = new byte[moduleInfo.Size];
+            this.ReadProcessMemory(buffer, moduleInfo.BaseAddress);
             return buffer;
-        }
-
-        public IntPtr ReadPtr(IntPtr address) => (IntPtr)(this.Is64Bits ? this.ReadUInt64(address) : this.ReadUInt32(address));
-
-        public uint ReadUInt32(IntPtr address)
-        {
-            return this.ReadBufferValue(address, sizeof(uint), b => b.ToUInt32());
-        }
-
-        public ulong ReadUInt64(IntPtr address)
-        {
-            return this.ReadBufferValue(address, sizeof(ulong), b => b.ToUInt64());
-        }
-
-        public byte ReadByte(IntPtr address)
-        {
-            return this.ReadBufferValue(address, sizeof(byte), b => b.ToByte());
         }
 
         private TValue ReadBufferValue<TValue>(IntPtr address, int size, Func<byte[], TValue> read)
@@ -242,10 +228,17 @@
                 return default;
             }
 
-            var length = this.ReadInt32(ptr + SizeOfPtr * 2);
+            // Offsets taken from:
+            // struct _MonoString {
+            //     MonoObject object; // Has two pointers (SizeOfPtr * 2)
+            //     int32_t length;
+            //     mono_unichar2 chars [MONO_ZERO_LEN_ARRAY];
+            // };
+
+            var length = this.ReadInt32(ptr + (SizeOfPtr * 2));
 
             return this.ReadBufferValue(
-                ptr + MonoLibraryOffsets.UnicodeString,
+                ptr + (SizeOfPtr * 2) + 4,
                 2 * length,
                 b => Encoding.Unicode.GetString(b, 0, 2 * length));
         }
@@ -258,19 +251,12 @@
             return obj.TypeDefinition.IsEnum ? obj.GetValue<object>("value__") : obj;
         }
 
-        private void ReadProcessMemory(
-            byte[] buffer,
-            uint processAddress,
-            bool allowPartialRead = false,
-            int? size = default)
-            => this.ReadProcessMemory(buffer, new IntPtr(processAddress), allowPartialRead, size);
-
-        protected abstract void ReadProcessMemory(
+        public abstract void ReadProcessMemory(
             byte[] buffer,
             IntPtr processAddress,
             bool allowPartialRead = false,
             int? size = default);
 
-        public abstract ModuleInfo GetMonoModule();
+        public abstract ModuleInfo GetModule(string moduleName);
     }
 }

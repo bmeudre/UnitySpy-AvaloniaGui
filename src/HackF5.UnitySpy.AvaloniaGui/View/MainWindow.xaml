@@ -78,7 +78,9 @@
       <TextBox   Margin="2" Grid.Column="1" Grid.Row="3" IsVisible="{Binding isLinux, Mode=OneTime}" Text="{Binding GameExecutableFilePath, Mode=TwoWay}" />
       <Button    Margin="2" Grid.Column="2" Grid.Row="3" IsVisible="{Binding isLinux, Mode=OneTime}" Command="{Binding OpenGameExecutableFile}">Open</Button>
       
-      <Button    Margin="2" Grid.Column="0" Grid.Row="4" IsVisible="{Binding IsLinux, Mode=OneTime}" Command="{Binding BuildImageAssembly}">Read</Button>
+      <Button    Margin="2" Grid.Column="0" Grid.Row="4" Command="{Binding BuildImageAssembly}">Read Assembly</Button>
+      <Button    Margin="2" Grid.Column="1" Grid.Row="4" Command="{Binding ReadRawMemory}" HorizontalAlignment="Left">Read Raw</Button>
+
 
     </Grid>
 

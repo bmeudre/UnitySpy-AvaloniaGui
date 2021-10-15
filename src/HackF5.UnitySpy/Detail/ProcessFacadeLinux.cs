@@ -18,7 +18,6 @@
         public ProcessFacadeLinux(int processId, string gameExecutableFilePath)
         {            
             this.processId = processId;
-            this.monoLibraryOffsets = MonoLibraryOffsets.GetOffsets(gameExecutableFilePath);
 
             string[] mappingsInFile = File.ReadAllLines($"/proc/{processId}/maps");
             this.mappings = new List<MemoryMapping>(mappingsInFile.Length);
@@ -39,8 +38,8 @@
                 mappings.Add(new MemoryMapping(memoryRegion[0], memoryRegion[1], name, lineColumnValues[4] != "0"));
             }
         }
-        
-        protected override void ReadProcessMemory(
+
+        public override void ReadProcessMemory(
             byte[] buffer,
             IntPtr processAddress,
             bool allowPartialRead = false,
@@ -49,7 +48,7 @@
             int length = size ?? buffer.Length;
             if(mappings.Exists(mapping => mapping.Contains(processAddress)))
             {
-                ReadProcessMemory(buffer, processAddress, length);
+                this.ReadProcessMemory(buffer, processAddress, length);
             }
             else
             {
@@ -66,10 +65,10 @@
             IntPtr processAddress,
             int size);
 
-        public override ModuleInfo GetMonoModule() 
+        public override ModuleInfo GetModule(string moduleName) 
         {            
             int mappingIndex = mappings.FindIndex(mapping => 
-                mapping.ModuleName.EndsWith(this.monoLibraryOffsets.MonoLibraryName));
+                mapping.ModuleName.EndsWith(moduleName));
             
             if (mappingIndex < 0)
             {
@@ -77,18 +76,19 @@
             }
 
             IntPtr startingAddress = mappings[mappingIndex].StartAddress;
-            string moduleName = mappings[mappingIndex].ModuleName;
+            string fullModuleName = mappings[mappingIndex].ModuleName;
 
-            while(!mappings[mappingIndex].IsStartingModule || mappings[mappingIndex].ModuleName == moduleName)
+            while(mappingIndex < mappings.Count && (!mappings[mappingIndex].IsStartingModule || mappings[mappingIndex].ModuleName == fullModuleName))
             {
                 mappingIndex++;
-            }        
+            }                    
 
+            mappingIndex--;
             uint size = Convert.ToUInt32(MemoryMapping.GetSize(startingAddress, mappings[mappingIndex].EndAddress));
             
-            Console.WriteLine($"Mono Module starting address = {startingAddress.ToString("X")}, end address = {mappings[mappingIndex].EndAddress}");
+            Console.WriteLine($"Mono Module starting address = {startingAddress.ToString("X")}, end address = {mappings[mappingIndex].EndAddress.ToString("X")}");
 
-            return new ModuleInfo(this.monoLibraryOffsets.MonoLibraryName, startingAddress, size);
+            return new ModuleInfo(moduleName, startingAddress, size);
         }
 
         protected struct MemoryMapping

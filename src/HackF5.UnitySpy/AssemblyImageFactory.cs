@@ -13,7 +13,7 @@
     [PublicAPI]
     public static class AssemblyImageFactory
     {        
-        public static IAssemblyImage Create(ProcessFacade process, string assemblyName = "Assembly-CSharp")
+        public static IAssemblyImage Create(UnityProcessFacade process, string assemblyName = "Assembly-CSharp")
         {
             var monoModule = process.GetMonoModule();
             var moduleDump = process.ReadModule(monoModule);
@@ -22,7 +22,7 @@
             return AssemblyImageFactory.GetAssemblyImage(process, assemblyName, rootDomainFunctionAddress);
         }
 
-        private static AssemblyImage GetAssemblyImage(ProcessFacade process, string name, IntPtr rootDomainFunctionAddress)
+        private static AssemblyImage GetAssemblyImage(UnityProcessFacade process, string name, IntPtr rootDomainFunctionAddress)
         {
             IntPtr domain;
             if (process.Is64Bits)

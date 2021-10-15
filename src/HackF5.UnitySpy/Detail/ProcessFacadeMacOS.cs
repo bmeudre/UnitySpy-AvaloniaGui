@@ -13,13 +13,12 @@
     {        
         protected readonly Process process;
         
-        public ProcessFacadeMacOS(int processId)
+        public ProcessFacadeMacOS(Process process)
         {            
-            this.process = Process.GetProcessById(processId);
-            this.monoLibraryOffsets = MonoLibraryOffsets.GetOffsets(this.process.MainModule.FileName);
+            this.process = process;
         }
                 
-        protected override void ReadProcessMemory(
+        public override void ReadProcessMemory(
             byte[] buffer,
             IntPtr processAddress,
             bool allowPartialRead = false,
@@ -51,16 +50,16 @@
             }    
         }
 
-        public override ModuleInfo GetMonoModule()
+        public override ModuleInfo GetModule(string moduleName)
         {          
-            if (!this.monoLibraryOffsets.Is64Bits)
+            if (!this.Is64Bits)
             {
                 throw new NotSupportedException("MacOS for 32 binaries is not supported currently");
             }
 
             foreach (ProcessModule module in this.process.Modules)
             {
-                if (module.ModuleName == this.monoLibraryOffsets.MonoLibraryName)
+                if (module.ModuleName == moduleName)
                 {
                     uint memorySize = Convert.ToUInt32(module.ModuleMemorySize);
                     return new ModuleInfo(module.ModuleName, module.BaseAddress, memorySize);

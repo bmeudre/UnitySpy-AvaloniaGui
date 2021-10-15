@@ -1,0 +1,45 @@
+<Window x:Class="HackF5.UnitySpy.AvaloniaGui.RawMemoryView"
+        xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:HackF5.UnitySpy.AvaloniaGui.ViewModel;assembly=HackF5.UnitySpy.AvaloniaGui"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        Background="{StaticResource BackgroundBrush}"
+        Title="Raw Memory Viewer"
+        MinWidth="200" >
+
+    <Design.DataContext>
+        <vm:RawMemoryView/>
+    </Design.DataContext>
+
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Margin="2" Orientation="Horizontal">
+            <TextBlock Margin="2" >Start Address</TextBlock>
+            <TextBox   Margin="2" Text="{Binding StartAddress, Mode=TwoWay}" />
+            <TextBlock Margin="2" >Buffer Size</TextBlock>
+            <ComboBox 
+                Margin="2"
+                SelectedItem="{Binding BufferSize, Mode=TwoWay}">
+                <ComboBoxItem>256</ComboBoxItem>
+                <ComboBoxItem>512</ComboBoxItem>
+                <ComboBoxItem>1024</ComboBoxItem>
+            </ComboBox>
+            <Button Margin="2" Command="{Binding Refresh}">Refresh</Button>           
+        </StackPanel>     
+        <ListBox
+            BorderBrush="Transparent"
+            BorderThickness="0"
+            Items="{Binding BufferLines, Mode=OneWay}"
+            VirtualizationMode="Simple">
+            <!-- <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="viewModel:TypeDefinitionViewModel">
+                    <TextBlock 
+                        Text="{Binding FullName}" 
+                        FontWeight="{Binding HasStaticFields, Converter={StaticResource BoolToFontWeightConverter}, ConverterParameter='Bold'}">                        
+                    </TextBlock>
+                </DataTemplate>
+            </ListBox.ItemTemplate> -->
+        </ListBox>   
+    </DockPanel>
+</Window>

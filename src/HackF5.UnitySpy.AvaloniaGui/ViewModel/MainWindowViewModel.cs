@@ -11,6 +11,7 @@
     using System.Threading.Tasks;
     using Avalonia.Controls;
     using HackF5.UnitySpy.Detail;
+    using HackF5.UnitySpy.Util;
     using HackF5.UnitySpy.AvaloniaGui.Mvvm;
     using HackF5.UnitySpy.AvaloniaGui.View;
     using ReactiveUI;
@@ -25,11 +26,15 @@
         
         private readonly MainWindow mainWindow;
 
+        private RawMemoryView rawMemoryView;
+
         private int linuxModeSelectedIndex = 0;
 
         private string memPseudoFilePath;
 
-        private string gameExecutableFilePath;        
+        private string gameExecutableFilePath;       
+
+        private ProcessFacade processFacade; 
         
         private AssemblyImageViewModel image;
 
@@ -40,7 +45,8 @@
             this.RefreshProcesses = ReactiveCommand.Create(this.StartRefresh);
             this.OpenMemPseudoFile = ReactiveCommand.Create(this.StartOpenMemPseudoFile);  
             this.OpenGameExecutableFile = ReactiveCommand.Create(this.StartOpenGameExecutableFile);   
-            this.BuildImageAssembly = ReactiveCommand.Create(this.StartBuildImageAssembly);
+            this.BuildImageAssembly = ReactiveCommand.Create(this.StartBuildImageAssembly); 
+            this.ReadRawMemory = ReactiveCommand.Create(this.StartReadRawMemory);
             this.commandCollection = new CommandCollection();  
             this.StartRefresh();
         }       
@@ -109,6 +115,8 @@
         public ReactiveCommand<Unit, Unit> OpenGameExecutableFile { get; }
         
         public ReactiveCommand<Unit, Unit> BuildImageAssembly { get; }
+        
+        public ReactiveCommand<Unit, Unit> ReadRawMemory { get; }
 
         private void StartRefresh() 
         {
@@ -127,8 +135,12 @@
 
         private void StartBuildImageAssembly() 
         {            
-            BuildImageAsync();
-            ///Task.Run(() => BuildImageAsync());
+            Task.Run(() => BuildImageAsync());
+        }
+
+        private void StartReadRawMemory() 
+        {            
+            Task.Run(ShowRawMemoryView);
         }
 
         private async Task ExecuteRefreshProcesses()
@@ -173,56 +185,76 @@
 
             dlg.Directory = Path.GetDirectoryName(preselectedFile);
 
-			//dlg.RestoreDirectory = true;
 			return await dlg.ShowAsync(mainWindow);
 		}
-        
-        private void /*async Task*/ BuildImageAsync()
-        {
 
+        public async Task<RawMemoryView> ShowRawMemoryView()
+        {
+            if (this.rawMemoryView == null)
+            {
+                rawMemoryView = new RawMemoryView();
+                rawMemoryView.DataContext = new RawMemoryViewModel(processFacade);
+            }
+            else
+            {
+                ((RawMemoryViewModel)rawMemoryView.DataContext).Process = processFacade;
+            }
+            return await rawMemoryView.ShowDialog<RawMemoryView>(this.mainWindow);
+        }
+        
+        private async Task BuildImageAsync()
+        {
             IAssemblyImage assemblyImage;            
             try
             {           
-                ProcessFacade processFacade;
-                if(IsWindows)      
+                MonoLibraryOffsets monoLibraryOffsets;
+                if (IsLinux)
                 {
-                    processFacade = new ProcessFacadeWindows(this.selectedProcess.Id);
-                }
-                else if(IsMacOS)
-                {   
-                    processFacade = new ProcessFacadeMacOS(this.selectedProcess.Id);
-                }
-                else if(IsLinux)
-                {
+                    monoLibraryOffsets = MonoLibraryOffsets.GetOffsets(gameExecutableFilePath);
                     switch(LinuxModeSelectedIndex)
                     {
-                        case 0: 
+                        case 0:
                             processFacade = new ProcessFacadeLinuxClient(this.selectedProcess.Id, this.GameExecutableFilePath);
                             break;
-                        case 1: 
+                        case 1:
                             processFacade = new ProcessFacadeLinuxPTrace(this.selectedProcess.Id, this.GameExecutableFilePath);
                             break;
-                        case 2: 
+                        case 2:
                             processFacade = new ProcessFacadeLinuxDirect(this.selectedProcess.Id, this.MemPseudoFilePath, this.GameExecutableFilePath);
                             break;
-                        default: 
+                        default:
                             throw new NotSupportedException("Linux mode not supported");
                     }
                 }
-                else
+                else 
                 {
-                    throw new NotSupportedException("Platform not supported");
+                    Process process = Process.GetProcessById(this.selectedProcess.Id);
+                    if (IsWindows)      
+                    {
+                        ProcessFacadeWindows windowsProcessFaacade = new ProcessFacadeWindows(process);
+                        processFacade = windowsProcessFaacade;
+                        monoLibraryOffsets = MonoLibraryOffsets.GetOffsets(windowsProcessFaacade.GetMainModuleFileName());
+                    }
+                    else if (IsMacOS)
+                    {   
+                        monoLibraryOffsets = MonoLibraryOffsets.GetOffsets(process.MainModule.FileName);;
+                        processFacade = new ProcessFacadeMacOS(process);
+                    }
+                    else
+                    {
+                        throw new NotSupportedException("Platform not supported");
+                    }
                 }
-                assemblyImage = AssemblyImageFactory.Create(processFacade);
+                UnityProcessFacade unityProcess = new UnityProcessFacade(processFacade, monoLibraryOffsets);
+                assemblyImage = AssemblyImageFactory.Create(unityProcess);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
-                throw ex;
-                //return;
-                //await DialogService.ShowAsync(
-                    // $"Failed to load process {process.Name} ({process.ProcessId}).",
-                    // ex.Message);
+                await MessageBox.ShowAsync(
+                    $"Failed to load process {this.selectedProcess.Name} ({this.selectedProcess.Id}).",
+                    ex.Message);
+                return;
             }
 
             TypeDefinitionContentViewModel.Factory typeDefContFactory = 

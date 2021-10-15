@@ -41,9 +41,7 @@ namespace HackF5.UnitySpy.Detail
             
             TypeDefinitionRuntimeInfoDomainVTables = 0x4,
 
-            VTable = 0x28,
-
-            UnicodeString = 0xc
+            VTable = 0x28
         };
 
         public static readonly MonoLibraryOffsets Unity2019_4_5_x64_Offsets = new MonoLibraryOffsets
@@ -78,9 +76,7 @@ namespace HackF5.UnitySpy.Detail
 
             TypeDefinitionRuntimeInfoDomainVTables = 0x4 + 0x4,
 
-            VTable = 0x28 + 0x18,
-
-            UnicodeString = 0x14
+            VTable = 0x28 + 0x18
         };
 
         private static readonly List<MonoLibraryOffsets> SupportedVersions = new List<MonoLibraryOffsets>()
@@ -155,36 +151,10 @@ namespace HackF5.UnitySpy.Detail
         public int VTable { get; private set; }
 
 
-        // Managed String Offsets
-
-        public int UnicodeString { get; private set; }
-
         public static MonoLibraryOffsets GetOffsets(string gameExecutableFilePath, bool force = true)
         {
             string unityVersion;
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
-                FileInfo gameExecutableFile = new FileInfo(gameExecutableFilePath);
-                string infoPlist = File.ReadAllText(gameExecutableFile.Directory.Parent.FullName + "/Info.plist");
-                string[] unityPlayerSplit = infoPlist.Split("Unity Player version ");
-                unityVersion = unityPlayerSplit[1].Split(" ")[0];
-
-                // Start the child process.
-                Process p = new Process();
-                // Redirect the output stream of the child process.
-                p.StartInfo.UseShellExecute = false;
-                p.StartInfo.RedirectStandardOutput = true;
-                p.StartInfo.FileName = "file";
-                p.StartInfo.Arguments = gameExecutableFilePath;
-                p.Start();
-                // Do not wait for the child process to exit before
-                // reading to the end of its redirected stream.
-                // p.WaitForExit();
-                // Read the output stream first and then wait.
-                string output = p.StandardOutput.ReadToEnd();
-                p.WaitForExit();
-                return GetOffsets(unityVersion, output.EndsWith("x86_64\n"), force);
-            }
-            else
+            if (gameExecutableFilePath.EndsWith(".exe"))
             {
                 var peHeader = new PeNet.PeFile(gameExecutableFilePath);
                 unityVersion = peHeader.Resources.VsVersionInfo.StringFileInfo.StringTable[0].FileVersion;
@@ -220,6 +190,28 @@ namespace HackF5.UnitySpy.Detail
                     case 0x14c: // IMAGE_FILE_MACHINE_I386
                         return GetOffsets(unityVersion, false, force);
                 }
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
+                FileInfo gameExecutableFile = new FileInfo(gameExecutableFilePath);
+                string infoPlist = File.ReadAllText(gameExecutableFile.Directory.Parent.FullName + "/Info.plist");
+                string[] unityPlayerSplit = infoPlist.Split("Unity Player version ");
+                unityVersion = unityPlayerSplit[1].Split(" ")[0];
+
+                // Start the child process.
+                Process p = new Process();
+                // Redirect the output stream of the child process.
+                p.StartInfo.UseShellExecute = false;
+                p.StartInfo.RedirectStandardOutput = true;
+                p.StartInfo.FileName = "file";
+                p.StartInfo.Arguments = gameExecutableFilePath;
+                p.Start();
+                // Do not wait for the child process to exit before
+                // reading to the end of its redirected stream.
+                // p.WaitForExit();
+                // Read the output stream first and then wait.
+                string output = p.StandardOutput.ReadToEnd();
+                p.WaitForExit();
+                return GetOffsets(unityVersion, output.EndsWith("x86_64\n"), force);
             }
             throw new NotSupportedException("Platform not supported");
         }

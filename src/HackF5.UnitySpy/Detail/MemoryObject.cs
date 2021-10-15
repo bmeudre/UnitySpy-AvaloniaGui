@@ -18,7 +18,7 @@
 
         public virtual AssemblyImage Image { get; }
 
-        public virtual ProcessFacade Process => this.Image.Process;
+        public virtual UnityProcessFacade Process => this.Image.Process;
 
         protected IntPtr Address { get; }
 
