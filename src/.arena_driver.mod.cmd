@@ -1,0 +1,1 @@
+cmd_/mnt/data-ssd/workspace/UnitySpy-AvaloniaGui/src/arena_driver.mod := { echo  /mnt/data-ssd/workspace/UnitySpy-AvaloniaGui/src/arena_driver.o;  echo; } > /mnt/data-ssd/workspace/UnitySpy-AvaloniaGui/src/arena_driver.mod

@@ -17,6 +17,8 @@
         {            
             this.process = process;
         }
+
+        public Process Process => this.process;
                 
         public override void ReadProcessMemory(
             byte[] buffer,

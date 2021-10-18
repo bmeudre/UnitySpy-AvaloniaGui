@@ -1,11 +1,13 @@
-<Window xmlns="https://github.com/avaloniaui"
+<Window x:Class="HackF5.UnitySpy.AvaloniaGui.MessageBox"
+        xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        Background="{StaticResource BackgroundBrush}"
+        Background="{x:Null}"
         MinWidth="200"
-        x:Class="HackF5.UnitySpy.AvaloniaGui.MessageBox" SizeToContent="WidthAndHeight" CanResize="False" >
+        SizeToContent="WidthAndHeight" CanResize="False">
+
     <StackPanel HorizontalAlignment="Center">
         <StackPanel Margin="10,2,10,2" Orientation="Horizontal">
             <Image Name="Image" Margin="5,5,5,5"/>
@@ -23,4 +25,5 @@
             <Button Name="No" Click="No_Click">No</Button>
         </StackPanel>
     </StackPanel>
+    
 </Window>

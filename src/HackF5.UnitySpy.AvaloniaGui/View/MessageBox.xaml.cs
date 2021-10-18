@@ -38,10 +38,34 @@ namespace HackF5.UnitySpy.AvaloniaGui
         Warning
     }
 
-    public class MessageBox : Avalonia.Controls.Window
-    {        
-        
-        protected Image _Image;
+    public class MessageBox : Window
+    {                
+        private readonly Image image;
+
+        private readonly TextBlock messageTxtBlck;
+ 
+        private readonly Button okBtn;
+
+        private readonly Button cancelBtn;
+
+        private readonly Button yesBtn;
+
+        private readonly Button noBtn;
+
+        private Action<MessageBoxResult> onClose;
+
+        private readonly Window parent;
+
+        public MessageBox() 
+        {
+            AvaloniaXamlLoader.Load(this);
+            this.image = this.FindControl<Image>("Image");
+            this.messageTxtBlck = this.FindControl<TextBlock>("Message");
+            this.okBtn = this.FindControl<Button>("Ok");
+            this.cancelBtn = this.FindControl<Button>("Cancel");
+            this.yesBtn = this.FindControl<Button>("Yes");
+            this.noBtn = this.FindControl<Button>("No");
+        }
 
         public MessageBoxImage Image 
         {
@@ -49,11 +73,11 @@ namespace HackF5.UnitySpy.AvaloniaGui
             {
                 if(value == MessageBoxImage.None)
                 {
-                    _Image.IsVisible = false;
+                    this.image.IsVisible = false;
                 }
                 else
                 {
-                    _Image.IsVisible = true;
+                    this.image.IsVisible = true;
                     string uri;
                     switch(value) 
                     {
@@ -68,45 +92,20 @@ namespace HackF5.UnitySpy.AvaloniaGui
                         default: throw new NotSupportedException("Message Box Image type not supported");
                     }
                     var assets = AvaloniaLocator.Current.GetService<IAssetLoader>();
-                    _Image.Source = new Bitmap(assets.Open(new Uri(uri)));
+                    this.image.Source = new Bitmap(assets.Open(new Uri(uri)));
                 }                
             }
         }
-
-        protected TextBlock _MessageTxtBlck;
- 
-        protected Button _OkBtn;
-
-        protected Button _CancelBtn;
-
-        protected Button _YesBtn;
-
-        protected Button _NoBtn;
-
-        protected Action<MessageBoxResult> _OnClose;
-
-        protected Window _Parent;
 
         public MessageBoxButton Buttons 
         {
             set 
             {
-                _OkBtn.IsVisible =     value == MessageBoxButton.OK       || value == MessageBoxButton.OKCancel;
-                _CancelBtn.IsVisible = value == MessageBoxButton.OKCancel || value == MessageBoxButton.YesNoCancel;
-                _YesBtn.IsVisible =    value == MessageBoxButton.YesNo    || value == MessageBoxButton.YesNoCancel;
-                _NoBtn.IsVisible =     value == MessageBoxButton.YesNo    || value == MessageBoxButton.YesNoCancel;
+                this.okBtn.IsVisible =     value == MessageBoxButton.OK       || value == MessageBoxButton.OKCancel;
+                this.cancelBtn.IsVisible = value == MessageBoxButton.OKCancel || value == MessageBoxButton.YesNoCancel;
+                this.yesBtn.IsVisible =    value == MessageBoxButton.YesNo    || value == MessageBoxButton.YesNoCancel;
+                this.noBtn.IsVisible =     value == MessageBoxButton.YesNo    || value == MessageBoxButton.YesNoCancel;
             }
-        }
-
-        public MessageBox() 
-        {
-            AvaloniaXamlLoader.Load(this);
-            _Image = this.FindControl<Image>("Image");
-            _MessageTxtBlck = this.FindControl<TextBlock>("Message");
-            _OkBtn = this.FindControl<Button>("Ok");
-            _CancelBtn = this.FindControl<Button>("Cancel");
-            _YesBtn = this.FindControl<Button>("Yes");
-            _NoBtn = this.FindControl<Button>("No");
         }
 
         protected void ShowDialog(Window parent) {
@@ -116,34 +115,34 @@ namespace HackF5.UnitySpy.AvaloniaGui
             }
             else 
             {
-                Show();
+                base.Show();
             } 
         }
 
         public void Ok_Click(object sender, RoutedEventArgs routedEventArgs) 
         {
-            Close(MessageBoxResult.Ok);
+            this.Close(MessageBoxResult.Ok);
         }
 
         public void Cancel_Click(object sender, RoutedEventArgs routedEventArgs) 
         {
-            Close(MessageBoxResult.Cancel);
+            this.Close(MessageBoxResult.Cancel);
         }
 
         public void Yes_Click(object sender, RoutedEventArgs routedEventArgs) 
         {
-            Close(MessageBoxResult.Yes);
+            this.Close(MessageBoxResult.Yes);
         }
 
         public void No_Click(object sender, RoutedEventArgs routedEventArgs) 
         {
-            Close(MessageBoxResult.No);
+            this.Close(MessageBoxResult.No);
         }
 
         protected void Close(MessageBoxResult result) 
         {
             base.Close(result);
-            _OnClose?.Invoke(result);
+            this.onClose?.Invoke(result);
         }
 
         public static void Show(string message, string title, Action<MessageBoxResult> onClose)
@@ -184,13 +183,15 @@ namespace HackF5.UnitySpy.AvaloniaGui
 
         private static MessageBox GetInstance(string message, string title = "Title", MessageBoxButton buttons = MessageBoxButton.OK, MessageBoxImage image = MessageBoxImage.None, Action<MessageBoxResult> onClose = null) 
         {       
+            Console.WriteLine("DEBUG: Showing MemoryView");
             MessageBox messageBox = new MessageBox();
+            Console.WriteLine("DEBUG: Showing MemoryView");
 
             messageBox.Image = image;
             messageBox.Title = title;
-            messageBox._MessageTxtBlck.Text = message;
+            messageBox.messageTxtBlck.Text = message;
             messageBox.Buttons = buttons;
-            messageBox._OnClose = onClose;
+            messageBox.onClose = onClose;
 
             return messageBox;
         }

@@ -1,0 +1,1 @@
+cmd_/mnt/data-ssd/workspace/UnitySpy-AvaloniaGui/src/Module.symvers := sed 's/ko$$/o/' /mnt/data-ssd/workspace/UnitySpy-AvaloniaGui/src/modules.order | scripts/mod/modpost -m -a   -o /mnt/data-ssd/workspace/UnitySpy-AvaloniaGui/src/Module.symvers -e -i Module.symvers   -T -

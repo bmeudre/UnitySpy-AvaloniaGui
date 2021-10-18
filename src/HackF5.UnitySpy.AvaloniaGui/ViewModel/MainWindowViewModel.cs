@@ -10,6 +10,7 @@
     using System.Runtime.InteropServices;
     using System.Threading.Tasks;
     using Avalonia.Controls;
+    using Avalonia.Threading;
     using HackF5.UnitySpy.Detail;
     using HackF5.UnitySpy.Util;
     using HackF5.UnitySpy.AvaloniaGui.Mvvm;
@@ -48,6 +49,7 @@
             this.BuildImageAssembly = ReactiveCommand.Create(this.StartBuildImageAssembly); 
             this.ReadRawMemory = ReactiveCommand.Create(this.StartReadRawMemory);
             this.commandCollection = new CommandCollection();  
+            this.rawMemoryView = new RawMemoryView();
             this.StartRefresh();
         }       
 
@@ -139,8 +141,8 @@
         }
 
         private void StartReadRawMemory() 
-        {            
-            Task.Run(ShowRawMemoryView);
+        {                        
+            Dispatcher.UIThread.InvokeAsync(this.ShowRawMemoryView);
         }
 
         private async Task ExecuteRefreshProcesses()
@@ -188,18 +190,20 @@
 			return await dlg.ShowAsync(mainWindow);
 		}
 
-        public async Task<RawMemoryView> ShowRawMemoryView()
-        {
-            if (this.rawMemoryView == null)
+        public async Task ShowRawMemoryView()
+        {            
+            Console.WriteLine("DEBUG: Showing MemoryView");
+            //Dispatcher.UIThread.InvokeAsync(() => await MessageBox.Show(mainWindow, "Hello"));
+
+            //await Dispatcher.UIThread.InvokeAsync(() => MessageBox.ShowAsync(mainWindow, "Hello"));
+            await MessageBox.ShowAsync(mainWindow, "Hello");
+
+            if (this.processFacade == null)
             {
-                rawMemoryView = new RawMemoryView();
-                rawMemoryView.DataContext = new RawMemoryViewModel(processFacade);
+                this.CreateProcessFacade();
             }
-            else
-            {
-                ((RawMemoryViewModel)rawMemoryView.DataContext).Process = processFacade;
-            }
-            return await rawMemoryView.ShowDialog<RawMemoryView>(this.mainWindow);
+            Console.WriteLine("DEBUG: Showing MemoryView la puta");
+            await this.rawMemoryView.ShowDialog(this.mainWindow);
         }
         
         private async Task BuildImageAsync()
@@ -208,42 +212,28 @@
             try
             {           
                 MonoLibraryOffsets monoLibraryOffsets;
-                if (IsLinux)
+                if (this.processFacade == null)
+                {
+                    this.CreateProcessFacade();
+                }
+
+                if (this.IsWindows)      
+                {
+                    ProcessFacadeWindows windowsProcessFacade = this.processFacade as ProcessFacadeWindows;
+                    monoLibraryOffsets = MonoLibraryOffsets.GetOffsets(windowsProcessFacade.GetMainModuleFileName());
+                }
+                else if (this.IsMacOS)
+                {   
+                    ProcessFacadeMacOS macOSProcessFacade = this.processFacade as ProcessFacadeMacOS;
+                    monoLibraryOffsets = MonoLibraryOffsets.GetOffsets(macOSProcessFacade.Process.MainModule.FileName);;
+                }
+                else if (this.IsLinux)
                 {
                     monoLibraryOffsets = MonoLibraryOffsets.GetOffsets(gameExecutableFilePath);
-                    switch(LinuxModeSelectedIndex)
-                    {
-                        case 0:
-                            processFacade = new ProcessFacadeLinuxClient(this.selectedProcess.Id, this.GameExecutableFilePath);
-                            break;
-                        case 1:
-                            processFacade = new ProcessFacadeLinuxPTrace(this.selectedProcess.Id, this.GameExecutableFilePath);
-                            break;
-                        case 2:
-                            processFacade = new ProcessFacadeLinuxDirect(this.selectedProcess.Id, this.MemPseudoFilePath, this.GameExecutableFilePath);
-                            break;
-                        default:
-                            throw new NotSupportedException("Linux mode not supported");
-                    }
                 }
-                else 
-                {
-                    Process process = Process.GetProcessById(this.selectedProcess.Id);
-                    if (IsWindows)      
-                    {
-                        ProcessFacadeWindows windowsProcessFaacade = new ProcessFacadeWindows(process);
-                        processFacade = windowsProcessFaacade;
-                        monoLibraryOffsets = MonoLibraryOffsets.GetOffsets(windowsProcessFaacade.GetMainModuleFileName());
-                    }
-                    else if (IsMacOS)
-                    {   
-                        monoLibraryOffsets = MonoLibraryOffsets.GetOffsets(process.MainModule.FileName);;
-                        processFacade = new ProcessFacadeMacOS(process);
-                    }
-                    else
-                    {
-                        throw new NotSupportedException("Platform not supported");
-                    }
+                else
+                {   
+                    throw new NotSupportedException("Platform not supported");
                 }
                 UnityProcessFacade unityProcess = new UnityProcessFacade(processFacade, monoLibraryOffsets);
                 assemblyImage = AssemblyImageFactory.Create(unityProcess);
@@ -291,5 +281,43 @@
 
             Console.WriteLine($"========= Type Definitions Read = {assemblyImage.TypeDefinitions.Count()} Has PAPA = {hasPapa} =========");
         }    
+
+        private void CreateProcessFacade()
+        {
+            if (this.IsLinux)
+            {
+                switch(this.LinuxModeSelectedIndex)
+                {
+                    case 0:
+                        this.processFacade = new ProcessFacadeLinuxClient(this.selectedProcess.Id, this.GameExecutableFilePath);
+                        break;
+                    case 1:
+                        this.processFacade = new ProcessFacadeLinuxPTrace(this.selectedProcess.Id, this.GameExecutableFilePath);
+                        break;
+                    case 2:
+                        this.processFacade = new ProcessFacadeLinuxDirect(this.selectedProcess.Id, this.MemPseudoFilePath, this.GameExecutableFilePath);
+                        break;
+                    default:
+                        throw new NotSupportedException("Linux mode not supported");
+                }
+            }
+            else 
+            {
+                Process process = Process.GetProcessById(this.selectedProcess.Id);
+                if (this.IsWindows)      
+                {
+                    this.processFacade = new ProcessFacadeWindows(process);
+                }
+                else if (this.IsMacOS)
+                {   
+                    this.processFacade = new ProcessFacadeMacOS(process);
+                }
+                else
+                {
+                    throw new NotSupportedException("Platform not supported");
+                }
+            }
+            ((RawMemoryViewModel)this.rawMemoryView.DataContext).Process = this.processFacade;
+        }
     }
 }

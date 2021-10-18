@@ -4,14 +4,17 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:HackF5.UnitySpy.AvaloniaGui.ViewModel;assembly=HackF5.UnitySpy.AvaloniaGui"
+        xmlns:viewModel="clr-namespace:HackF5.UnitySpy.AvaloniaGui.ViewModel"
+        d:DataContext="{d:DesignInstance viewModel:RawMemoryViewModel}"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        Background="{StaticResource BackgroundBrush}"
+        Background="{x:Null}"
         Title="Raw Memory Viewer"
         MinWidth="200" >
 
-    <Design.DataContext>
+    <!-- <Design.DataContext>
         <vm:RawMemoryView/>
-    </Design.DataContext>
+    </Design.DataContext> -->
+    
 
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Margin="2" Orientation="Horizontal">
@@ -32,14 +35,13 @@
             BorderThickness="0"
             Items="{Binding BufferLines, Mode=OneWay}"
             VirtualizationMode="Simple">
-            <!-- <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="viewModel:TypeDefinitionViewModel">
-                    <TextBlock 
-                        Text="{Binding FullName}" 
-                        FontWeight="{Binding HasStaticFields, Converter={StaticResource BoolToFontWeightConverter}, ConverterParameter='Bold'}">                        
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock
+                        Text="{Binding}" >
                     </TextBlock>
                 </DataTemplate>
-            </ListBox.ItemTemplate> -->
+            </ListBox.ItemTemplate>
         </ListBox>   
     </DockPanel>
 </Window>

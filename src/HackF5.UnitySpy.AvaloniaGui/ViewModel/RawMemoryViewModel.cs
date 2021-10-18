@@ -21,17 +21,15 @@
     {        
         private ProcessFacade process;
 
-        private int bufferSize;
+        private string bufferSize = "1024";
 
         private string startAddress;
 
         private byte[] buffer;
 
-        public RawMemoryViewModel(ProcessFacade process)
+        public RawMemoryViewModel()
         {
-            this.process = process;
             this.Refresh = ReactiveCommand.Create(this.StartRefresh);
-            this.StartRefresh();
         }     
 
         public ProcessFacade Process
@@ -45,7 +43,7 @@
             }
         }  
                                 
-        public int BufferSize
+        public string BufferSize
         {
             get => this.bufferSize;
             set {
@@ -77,7 +75,7 @@
 
         private void InitBuffer()
         {
-            buffer = new byte[bufferSize];
+            buffer = new byte[int.Parse(bufferSize)];
         }
 
         private void StartRefresh() 
@@ -92,12 +90,12 @@
                 this.InitBuffer();
             }
             IntPtr startAddressPtr = new IntPtr(Convert.ToInt64(startAddress, 16));
-            this.process.ReadProcessMemory(buffer, startAddressPtr, true, bufferSize);
+            this.process.ReadProcessMemory(buffer, startAddressPtr, true, buffer.Length);
 
             this.BufferLines.Clear();
 
             int bytesPerLine = 32;            
-            for (int i = 0; i < bufferSize; i+=bytesPerLine)
+            for (int i = 0; i < buffer.Length; i+=bytesPerLine)
             {
                 IntPtr address = startAddressPtr + i;
                 StringBuilder line = new StringBuilder(address.ToString("X"));
