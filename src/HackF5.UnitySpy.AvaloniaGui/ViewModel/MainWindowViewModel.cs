@@ -317,7 +317,8 @@
                     throw new NotSupportedException("Platform not supported");
                 }
             }
-            ((RawMemoryViewModel)this.rawMemoryView.DataContext).Process = this.processFacade;
+            Dispatcher.UIThread.InvokeAsync(() => 
+                ((RawMemoryViewModel)this.rawMemoryView.DataContext).Process = this.processFacade);
         }
     }
 }

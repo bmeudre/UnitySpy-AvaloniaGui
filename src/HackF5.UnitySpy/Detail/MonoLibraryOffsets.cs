@@ -192,6 +192,9 @@ namespace HackF5.UnitySpy.Detail
                 }
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
+                Console.WriteLine($"DEBUG: MAIN MODULE = ");
+                Console.WriteLine($"DEBUG: MAIN MODULE = {gameExecutableFilePath}");
+
                 FileInfo gameExecutableFile = new FileInfo(gameExecutableFilePath);
                 string infoPlist = File.ReadAllText(gameExecutableFile.Directory.Parent.FullName + "/Info.plist");
                 string[] unityPlayerSplit = infoPlist.Split("Unity Player version ");
@@ -211,6 +214,7 @@ namespace HackF5.UnitySpy.Detail
                 // Read the output stream first and then wait.
                 string output = p.StandardOutput.ReadToEnd();
                 p.WaitForExit();
+                Console.WriteLine($"DEBUG: file cmd output = {output}, ends with x86_64 {output.EndsWith("x86_64\n")}");
                 return GetOffsets(unityVersion, output.EndsWith("x86_64\n"), force);
             }
             throw new NotSupportedException("Platform not supported");

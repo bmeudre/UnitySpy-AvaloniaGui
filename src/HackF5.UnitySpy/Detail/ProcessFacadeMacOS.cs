@@ -61,6 +61,7 @@
 
             foreach (ProcessModule module in this.process.Modules)
             {
+                Console.WriteLine($"MODULE = {module.ModuleName}");
                 if (module.ModuleName == moduleName)
                 {
                     uint memorySize = Convert.ToUInt32(module.ModuleMemorySize);

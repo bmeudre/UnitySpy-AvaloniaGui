@@ -17,6 +17,7 @@
         {
             this.process = process;
             this.monoLibraryOffsets = monoLibraryOffsets;
+            this.process.Is64Bits = monoLibraryOffsets.Is64Bits;
         }
 
         public MonoLibraryOffsets MonoLibraryOffsets => this.monoLibraryOffsets;
