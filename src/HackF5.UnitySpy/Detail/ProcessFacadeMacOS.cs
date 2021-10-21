@@ -51,32 +51,31 @@
                 bufferHandle.Free();
             }    
         }
-
+        
+        
         public override ModuleInfo GetModule(string moduleName)
         {          
             if (!this.Is64Bits)
             {
                 throw new NotSupportedException("MacOS for 32 binaries is not supported currently");
             }
-
-            foreach (ProcessModule module in this.process.Modules)
-            {
-                Console.WriteLine($"MODULE = {module.ModuleName}");
-                if (module.ModuleName == moduleName)
-                {
-                    uint memorySize = Convert.ToUInt32(module.ModuleMemorySize);
-                    return new ModuleInfo(module.ModuleName, module.BaseAddress, memorySize);
-                }
-            }
-
-            throw new InvalidOperationException("Mono module not found. ");
+            
+            uint size = 0;
+            IntPtr address = GetModuleInfo(this.process.Id, moduleName, ref size);
+            return new ModuleInfo(moduleName, address, size);
         }
 
-        [DllImport("/tmp/read_mem.dylib", SetLastError = true)]
+        [DllImport("macos.dylib", EntryPoint = "read_process_memory_to_buffer", SetLastError = true)]
         private static extern int ReadProcessMemory(
             int processId,
             IntPtr lpBaseAddress,
             IntPtr lpBuffer,
             int nSize);
+
+        [DllImport("macos.dylib", EntryPoint = "get_module_info", SetLastError = true)]
+        private static extern IntPtr GetModuleInfo(
+            int processId,
+            string moduleName,
+            ref uint nSize);
     }
 }

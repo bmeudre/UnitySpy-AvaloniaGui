@@ -13,7 +13,7 @@ namespace HackF5.UnitySpy.Detail
         {
             UnityVersion = new UnityVersion(2018, 4, 10),
             Is64Bits = false,
-            MonoLibraryName = "mono-2.0-bdwgc.dll",
+            MonoLibraryName = "libmonobdwgc-2.0.dylib",
 
             AssemblyImage = 0x44,
             ReferencedAssemblies = 0x6c,
@@ -48,7 +48,7 @@ namespace HackF5.UnitySpy.Detail
         {
             UnityVersion = new UnityVersion(2019, 4, 5),
             Is64Bits = true,
-            MonoLibraryName = "mono-2.0-bdwgc.dll",
+            MonoLibraryName = "libmonobdwgc-2.0.dylib",
 
             AssemblyImage = 0x44 + 0x1c,
             ReferencedAssemblies = 0x6c + 0x5c,

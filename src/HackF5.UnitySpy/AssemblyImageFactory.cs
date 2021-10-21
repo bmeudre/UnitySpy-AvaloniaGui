@@ -13,7 +13,7 @@
     [PublicAPI]
     public static class AssemblyImageFactory
     {        
-        public static IAssemblyImage Create(UnityProcessFacade process, string assemblyName = "Assembly-CSharp")
+        public static IAssemblyImage Create([NotNull] UnityProcessFacade process, string assemblyName = "Assembly-CSharp")
         {
             var monoModule = process.GetMonoModule();
             var moduleDump = process.ReadModule(monoModule);
